@@ -1,6 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ApplicationCommandType, ContextMenuCommandBuilder } = require('discord.js');
 const { getMetadata } = require('../utils/metadata');
-const { createMetadataEmbed } = require('../utils/embedBuilder');
+const { createMetadataEmbed, createFavoriteImageEmbed } = require('../utils/embedBuilder');
 const { loadMonitoredChannels, saveMonitoredChannels } = require('../utils/channelStorage');
 
 // 建立指令定義
@@ -32,6 +32,12 @@ const commands = [
 					{ name: '查看當前頻道', value: 'list' },
 				),
 		),
+	new ContextMenuCommandBuilder()
+		.setName('Check Image Info')
+		.setType(ApplicationCommandType.Message),
+	new ContextMenuCommandBuilder()
+		.setName('Favorite Image')
+		.setType(ApplicationCommandType.Message),
 ].map(command => command.toJSON());
 
 // 處理 finddata 指令
@@ -125,8 +131,57 @@ async function handleSetChannelCommand(interaction) {
 	await interaction.editReply({ content: responseMessage });
 }
 
+// 處理 View Image Info 指令
+async function handleViewImageInfoCommand(interaction) {
+	await interaction.deferReply({ ephemeral: true });
+
+	const message = interaction.targetMessage;
+	const imageAttachments = message.attachments.filter(attachment => attachment.contentType && attachment.contentType.startsWith('image/'));
+
+	if (imageAttachments.size === 0) {
+		await interaction.editReply({ content: '❌ 這條訊息沒有圖片附件喔～', ephemeral: true });
+		return;
+	}
+
+	for (const imageAttachment of imageAttachments.values()) {
+		const metadata = await getMetadata(imageAttachment.url, imageAttachment.contentType);
+		const embed = await createMetadataEmbed(metadata, interaction.user, imageAttachment.url);
+		await interaction.user.send({ embeds: [embed] });
+	}
+
+	await interaction.editReply({ content: '✅ 已私訊所有圖片的資訊給你囉！', ephemeral: true });
+}
+
+// Handle the new "Favorite Image" context menu command
+async function handleFavoriteImageCommand(interaction) {
+	await interaction.deferReply({ ephemeral: true });
+
+	const message = interaction.targetMessage;
+	const imageAttachments = message.attachments.filter(attachment => attachment.contentType && attachment.contentType.startsWith('image/'));
+
+	if (imageAttachments.size === 0) {
+		await interaction.editReply({ content: '❌ 這條訊息沒有圖片附件喔～我沒辦法收藏耶！', ephemeral: true });
+		return;
+	}
+
+	for (const imageAttachment of imageAttachments.values()) {
+		try {
+			const favoriteEmbed = await createFavoriteImageEmbed(imageAttachment.url, message.url, interaction.user);
+			await interaction.user.send({ embeds: [favoriteEmbed] });
+		}
+		catch (error) {
+			console.error('Failed to send favorite image via context menu to user:', error);
+			await interaction.user.send({ content: `收藏失敗，可能無法私訊給你。請檢查你的隱私設定或再試一次。圖片連結：${imageAttachment.url}`, ephemeral: true });
+		}
+	}
+
+	await interaction.editReply({ content: '✅ 所有圖片已收藏並私訊給你囉！', ephemeral: true });
+}
+
 module.exports = {
 	commands,
 	handleFindDataCommand,
 	handleSetChannelCommand,
+	handleViewImageInfoCommand,
+	handleFavoriteImageCommand,
 };

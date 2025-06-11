@@ -1,27 +1,76 @@
 const { EmbedBuilder } = require('discord.js');
 const { EMBED_COLORS } = require('../config');
-const { parseStableDiffusionMetadata } = require('./metadata');
+const { parseStableDiffusionMetadata, parseComfyUIMetadata, parseSwarmUIMetadata } = require('./metadata');
+
+// Helper function to truncate text to fit Discord embed field limits
+function truncateText(text, maxLength = 1000) {
+	if (!text || text === 'N/A') return text;
+	if (text.length <= maxLength) return text;
+	return text.substring(0, maxLength) + '...';
+}
 
 async function createMetadataEmbed(metadata, user, imageUrl = null) {
 	const embed = new EmbedBuilder();
 
 	if (metadata) {
-		const parsedMetadata = await parseStableDiffusionMetadata(metadata);
+		let parsedMetadata;
+
+		// Handle different metadata types
+		if (metadata.type === 'swarmui') {
+			parsedMetadata = await parseSwarmUIMetadata(metadata.data);
+		}
+		else if (metadata.type === 'comfyui') {
+			parsedMetadata = await parseComfyUIMetadata(metadata.data);
+		}
+		else if (metadata.type === 'stable-diffusion-webui') {
+			parsedMetadata = await parseStableDiffusionMetadata(metadata.data);
+		}
+		else {
+			parsedMetadata = await parseStableDiffusionMetadata(metadata);
+		}
 
 		embed
 			.setTitle('✨ Image Metadata ✨')
-			.setColor(EMBED_COLORS.SUCCESS)
-			.addFields(
-				{ name: 'Prompt (正面提示詞)', value: parsedMetadata.positivePrompt ? `\`\`\`\n${parsedMetadata.positivePrompt}\n\`\`\`` : 'N/A' },
-				{ name: 'Negative Prompt (負面提示詞)', value: parsedMetadata.negativePrompt ? `\`\`\`\n${parsedMetadata.negativePrompt}\n\`\`\`` : 'N/A' },
-			);
+			.setColor(EMBED_COLORS.SUCCESS);
 
-		// Add parameter fields
+		if (metadata.type === 'comfyui') {
+			let combinedPrompts = '';
+			if (parsedMetadata.positivePrompt && parsedMetadata.positivePrompt !== 'N/A') {
+				combinedPrompts += `**Positive:** ${parsedMetadata.positivePrompt}`;
+			}
+			if (parsedMetadata.negativePrompt && parsedMetadata.negativePrompt !== 'N/A') {
+				if (combinedPrompts) combinedPrompts += '\n\n';
+				combinedPrompts += `**Negative:** ${parsedMetadata.negativePrompt}`;
+			}
+
+			embed.addFields({
+				name: 'ComfyUI Prompts',
+				value: combinedPrompts ? `\`\`\`\n${truncateText(combinedPrompts)}\n\`\`\`` : 'N/A',
+			});
+		}
+		else {
+			embed.addFields(
+				{
+					name: 'Prompt (正面提示詞)',
+					value: parsedMetadata.positivePrompt && parsedMetadata.positivePrompt !== 'N/A'
+						? `\`\`\`\n${truncateText(parsedMetadata.positivePrompt)}\n\`\`\``
+						: 'N/A',
+				},
+				{
+					name: 'Negative Prompt (負面提示詞)',
+					value: parsedMetadata.negativePrompt && parsedMetadata.negativePrompt !== 'N/A'
+						? `\`\`\`\n${truncateText(parsedMetadata.negativePrompt)}\n\`\`\``
+						: 'N/A',
+				},
+			);
+		}
+
 		const parameterOrder = ['Model', 'Model hash', 'Steps', 'Sampler', 'CFG scale', 'Seed', 'Size', 'Denoising strength', 'Clip skip', 'Schedule Type'];
 
 		for (const key of parameterOrder) {
 			if (parsedMetadata.parameters[key] && parsedMetadata.parameters[key] !== 'N/A') {
-				embed.addFields({ name: key, value: `\`\`\`\n${parsedMetadata.parameters[key]}\n\`\`\``, inline: true });
+				const paramValue = truncateText(parsedMetadata.parameters[key], 950);
+				embed.addFields({ name: key, value: `\`\`\`\n${paramValue}\n\`\`\``, inline: true });
 			}
 		}
 	}
@@ -62,7 +111,37 @@ async function sendMetadataReply(channel, authorId, metadata, sourceMessageUrl, 
 	}
 }
 
+async function createFavoriteImageEmbed(imageUrl, messageUrl, user) {
+	const embed = new EmbedBuilder()
+		.setTitle('❤️ 收藏圖片')
+		.setColor('#DDAACC');
+
+	if (imageUrl) {
+		embed.setImage(imageUrl);
+	}
+
+	if (messageUrl) {
+		embed.addFields({
+			name: '原始訊息連結',
+			value: `[點我查看](${messageUrl})`,
+			inline: false,
+		});
+	}
+
+	if (user) {
+		embed.setFooter({
+			text: `收藏者：${user.displayName || user.username}`,
+			iconURL: user.displayAvatarURL(),
+		});
+	}
+
+	embed.setTimestamp();
+
+	return embed;
+}
+
 module.exports = {
 	createMetadataEmbed,
 	sendMetadataReply,
+	createFavoriteImageEmbed,
 };

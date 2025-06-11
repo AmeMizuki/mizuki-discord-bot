@@ -1,110 +1,126 @@
-# 曉山瑞希 Discord Bot
+[繁體中文](README.zh-TW.md) | [English](README.md)
 
-一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊。
+# Akiyama Mizuki Discord Bot
+
+A cute Discord bot specialized in extracting and displaying Stable Diffusion metadata information from images.
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
 
-## 功能特色
+## Features
 
-- 🔍 自動監聽圖片並添加放大鏡表情符號
-- 📊 提取並顯示 Stable Diffusion 參數（prompt、negative prompt、model 等）
-- 💬 私訊回覆，保護用戶隱私
-- ⚙️ 管理員可設定監聽頻道
-- 💾 監聽頻道設定會持久化保存
-- 🎀 可愛的回應語氣
+- 🔍 Automatically adds a magnifying glass emoji to image messages in monitored channels.
+- ❤️ Automatically adds a heart emoji to image messages in monitored channels.
+- 📊 Extracts and displays Stable Diffusion parameters (prompt, negative prompt, model, etc.).
+- 💬 Replies via private message to protect user privacy.
+- ⚙️ Administrators can set monitored channels.
+- 💾 Monitored channel settings are persistently saved.
+- ⭐ Favorite image function: Users can favorite images via heart emoji reaction or a right-click context menu command ("Favorite Image"). Favorited images are sent to the user via private message in an aesthetically pleasing embed format, including the image itself and a link to the original message.
+- 🎀 Cute response tone.
 
-## 檔案結構
+## File Structure
 
 ```
 discordbot/
-├── index.js                      # 主程式入口
-├── config.js                     # 配置檔案
-├── package.json                  # 依賴管理
-├── .env                          # 環境變數（需自行創建）
-├── monitored_channels.json       # 監聽頻道設定（自動生成，已加入 .gitignore）
-├── monitored_channels.example.json # 監聽頻道設定範例
+├── index.js                      # Main program entry point
+├── config.js                     # Configuration file
+├── package.json                  # Dependency management
+├── .env                          # Environment variables (needs to be created manually)
+├── monitored_channels.json       # Monitored channel settings (auto-generated, added to .gitignore)
+├── monitored_channels.example.json # Example monitored channel settings
 ├── commands/
-│   └── index.js                  # 斜線指令處理
+│   └── index.js                  # Slash command handling
 └── utils/
-    ├── metadata.js               # Metadata 解析工具
-    ├── embedBuilder.js           # Discord Embed 建構工具
-    └── channelStorage.js         # 頻道設定持久化工具
+    ├── metadata.js               # Metadata parsing utilities
+    ├── embedBuilder.js           # Discord Embed construction utilities
+    └── channelStorage.js         # Channel settings persistence utilities
 ```
 
-## 安裝與設定
+## Installation and Setup
 
-1. 安裝依賴套件：
+1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. 創建 `.env` 檔案：
+2. Create a `.env` file:
 ```env
-BOT_TOKEN=你的機器人TOKEN
-CLIENT_ID=你的機器人CLIENT_ID
+BOT_TOKEN=YOUR_BOT_TOKEN
+CLIENT_ID=YOUR_BOT_CLIENT_ID
 ```
 
-3. 啟動機器人：
+3. Start the bot:
 ```bash
 node index.js
 ```
 
-## 監聽頻道設定
+## Monitored Channel Settings
 
-如果需要手動設定，可參考 `monitored_channels.example.json` 的格式：
+If you need to set up manually, refer to the `monitored_channels.example.json` format:
 
 ```json
 {
   "channels": [
-    "頻道ID1",
-    "頻道ID2"
+    "CHANNEL_ID_1",
+    "CHANNEL_ID_2"
   ],
   "lastUpdated": "2024-01-01T00:00:00.000Z"
 }
 ```
 
-**注意**：
-- 如果 `channels` 陣列為空，機器人不會自動監聽任何頻道
-- 只有透過 `/setchannel` 指令設定的頻道才會被監聽
-- 設定會在機器人重啟後保持
+**Note**:
+- If the `channels` array is empty, the bot will not automatically monitor any channels.
+- Only channels set via the `/setchannel` command will be monitored.
+- Settings will persist after bot restarts.
 
-## 使用方式
+## Usage
 
-### 斜線指令
+### Slash Commands
 
-- `/finddata` - 上傳圖片查看 metadata
-- `/setchannel` - 設定監聽頻道（僅管理員）
-  - `action: 添加頻道` - 添加頻道到監聽清單
-  - `action: 移除頻道` - 從監聽清單移除頻道
-  - `action: 清空所有頻道` - 清空監聽清單（不會監聽任何頻道）
-  - `action: 查看當前頻道` - 查看目前監聽的頻道
+- `/finddata` - Upload an image to view its metadata.
+- `/setchannel` - Set monitored channels (administrator only).
+  - `action: Add Channel` - Add a channel to the monitored list.
+  - `action: Remove Channel` - Remove a channel from the monitored list.
+  - `action: Clear All Channels` - Clear the monitored list (bot will not monitor any channels automatically).
+  - `action: View Current Channels` - View currently monitored channels.
 
-### 自動功能
+### Automatic Features
 
-1. 當有人在監聽頻道上傳圖片時，曉山瑞希會自動添加 🔍 表情符號
-2. 點擊 🔍 表情符號後，會收到包含圖片 metadata 的私訊
+1. When someone uploads an image in a monitored channel, Akiyama Mizuki will automatically add 🔍 and ❤️ emojis.
+2. Clicking the 🔍 emoji will send a private message containing the image's metadata (without the original message link).
+3. Clicking the ❤️ emoji or using the right-click context menu command "Favorite Image" will send a private message with an aesthetically pleasing embed of the image and a link to the original message.
 
-## 支援的圖片格式
+## Supported Image Formats
 
-- PNG - 支援 tEXt 和 zTXt chunks
+- PNG - Supports tEXt and zTXt chunks.
 
-## 開發說明
+## Development Notes
 
-### 模組化結構
+### Modular Structure
 
-- `config.js` - 集中管理配置和環境變數
-- `utils/metadata.js` - 處理圖片 metadata 解析
-- `utils/embedBuilder.js` - 建構 Discord embed 訊息
-- `utils/channelStorage.js` - 處理監聽頻道的持久化存儲
-- `commands/index.js` - 處理斜線指令邏輯
+- `config.js` - Centralized management of configurations and environment variables.
+- `utils/metadata.js` - Handles image metadata parsing.
+- `utils/embedBuilder.js` - Constructs Discord embed messages.
+- `utils/channelStorage.js` - Handles persistent storage of monitored channel settings.
+- `commands/index.js` - Handles slash command logic.
 
-### 新增功能
+### Adding New Features
 
-要新增功能時，請遵循模組化原則：
-1. 將相關功能放在對應的模組中
-2. 保持單一職責原則
-3. 使用 `module.exports` 導出需要的函式
+When adding new features, please follow modular principles:
+1. Place related functionalities in corresponding modules.
+2. Adhere to the Single Responsibility Principle.
+3. Use `module.exports` to export necessary functions.
 
-## 授權
+## Changelog
 
-此專案僅供學習和個人使用。
+### Version 1.1.0 (2024-07-26)
+
+*   **New Feature:** Added image favoriting feature via heart emoji reaction.
+*   **New Feature:** Added "Favorite Image" right-click context menu command.
+*   **Enhancement:** Favorited images are now sent via private message with an embedded image and a link to the original message, using a `#DDAACC` color for aesthetic presentation.
+*   **Enhancement:** The magnifying glass reaction (for metadata) no longer includes the original message link in the private message.
+*   **Refinement:** Removed transient "processing" messages (e.g., "正在幫你提取圖片的資訊喔～請稍等一下！") in private DMs for both magnifying glass and favoriting features to reduce message clutter.
+*   **Bug Fix:** Enabled handling of multiple image attachments in a single message for both magnifying glass (metadata extraction) and favoriting features, ensuring all images are processed.
+
+## License
+
+This project is for learning and personal use only.
