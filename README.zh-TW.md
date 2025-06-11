@@ -2,6 +2,8 @@
 
 # 曉山瑞希 Discord Bot
 
+如果你遇到任何問題請加入 Discord 伺服器發問： [瑞希 Bot](https://discord.gg/avMvrhdX3r)
+
 一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊。
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
