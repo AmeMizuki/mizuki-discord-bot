@@ -2,6 +2,8 @@
 
 一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊。
 
+![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
+
 ## 功能特色
 
 - 🔍 自動監聽圖片並添加放大鏡表情符號
