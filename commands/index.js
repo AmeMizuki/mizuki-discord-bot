@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { getMetadata } = require('../utils/metadata');
 const { createMetadataEmbed } = require('../utils/embedBuilder');
-const { MONITORED_CHANNELS } = require('../config');
+const { loadMonitoredChannels, saveMonitoredChannels } = require('../utils/channelStorage');
 
 // 建立指令定義
 const commands = [
@@ -56,7 +56,6 @@ async function handleFindDataCommand(interaction) {
 
 // 處理 setchannel 指令
 async function handleSetChannelCommand(interaction) {
-	// 檢查用戶是否有管理員權限
 	if (!interaction.member.permissions.has('Administrator')) {
 		await interaction.reply({ content: '❌ 只有管理員才能使用這個指令喔～', ephemeral: true });
 		return;
@@ -66,13 +65,15 @@ async function handleSetChannelCommand(interaction) {
 
 	const channel = interaction.options.getChannel('channel');
 	const action = interaction.options.getString('action');
+	const monitoredChannels = loadMonitoredChannels();
 
 	let responseMessage = '';
 
 	switch (action) {
 	case 'add': {
-		if (!MONITORED_CHANNELS.includes(channel.id)) {
-			MONITORED_CHANNELS.push(channel.id);
+		if (!monitoredChannels.includes(channel.id)) {
+			monitoredChannels.push(channel.id);
+			saveMonitoredChannels(monitoredChannels);
 			responseMessage = `✅ 好的！我已經把 ${channel.name} 加到監聽清單裡了～以後有圖片我就會幫忙查看！`;
 		}
 		else {
@@ -82,9 +83,10 @@ async function handleSetChannelCommand(interaction) {
 	}
 
 	case 'remove': {
-		const index = MONITORED_CHANNELS.indexOf(channel.id);
+		const index = monitoredChannels.indexOf(channel.id);
 		if (index > -1) {
-			MONITORED_CHANNELS.splice(index, 1);
+			monitoredChannels.splice(index, 1);
+			saveMonitoredChannels(monitoredChannels);
 			responseMessage = `✅ 好的！我已經把 ${channel.name} 從監聽清單移除了～`;
 		}
 		else {
@@ -94,18 +96,18 @@ async function handleSetChannelCommand(interaction) {
 	}
 
 	case 'clear': {
-		MONITORED_CHANNELS.length = 0;
-		responseMessage = '✅ 好的！我已經清空所有監聽頻道了～現在我會監聽所有頻道的圖片喔！';
+		saveMonitoredChannels([]);
+		responseMessage = '✅ 好的！我已經清空所有監聽頻道了～現在我不會自動監聽任何頻道的圖片，只有手動使用指令才會查看圖片資訊喔！';
 		break;
 	}
 
 	case 'list': {
-		if (MONITORED_CHANNELS.length === 0) {
-			responseMessage = '📋 目前我沒有設定特定的監聽頻道，所以會監聽所有頻道的圖片喔～';
+		if (monitoredChannels.length === 0) {
+			responseMessage = '📋 目前我沒有設定任何監聽頻道，所以不會自動監聽圖片。你可以使用 /finddata 指令手動查看圖片資訊喔～';
 		}
 		else {
 			const channelNames = [];
-			for (const channelId of MONITORED_CHANNELS) {
+			for (const channelId of monitoredChannels) {
 				try {
 					const ch = await interaction.client.channels.fetch(channelId);
 					channelNames.push(ch.name);

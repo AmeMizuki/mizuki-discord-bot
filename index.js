@@ -100,16 +100,15 @@ client.on('messageCreate', async message => {
 	// 忽略機器人自己的訊息
 	if (message.author.bot) return;
 
-	// 如果設定了特定頻道，只監聽這些頻道
-	if (MONITORED_CHANNELS.length > 0 && !MONITORED_CHANNELS.includes(message.channel.id)) {
+	if (MONITORED_CHANNELS.length === 0 || !MONITORED_CHANNELS.includes(message.channel.id)) {
 		return;
 	}
 
-	const pngAttachment = message.attachments.find(att =>
-		att.contentType && att.contentType === 'image/png',
+	const imageAttachment = message.attachments.find(att =>
+		att.contentType && att.contentType.startsWith('image/'),
 	);
 
-	if (pngAttachment) {
+	if (imageAttachment) {
 		try {
 			await message.react('🔍');
 		}
