@@ -6,20 +6,10 @@ class TwitterService {
 		this.urlRegex = /https?:\/\/(?:www\.)?(?:twitter\.com|x\.com)\/\S+\/status\/(\d+)/gi;
 	}
 
-	/**
-	 * Detects Twitter/X URLs in a message
-	 * @param {string} content - Message content
-	 * @returns {string[]} Array of Twitter URLs
-	 */
 	detectUrls(content) {
 		return content.match(this.urlRegex) || [];
 	}
 
-	/**
-	 * Processes a single Twitter URL and returns the appropriate response
-	 * @param {string} url - Twitter URL
-	 * @returns {Promise<{type: string, content: any}>} Processing result
-	 */
 	async processUrl(url) {
 		const tweetId = getTweetIdFromUrl(url);
 		if (!tweetId) {
@@ -63,11 +53,6 @@ class TwitterService {
 		};
 	}
 
-	/**
-	 * Creates a fallback fxtwitter link
-	 * @param {string} originalUrl - Original Twitter URL
-	 * @returns {string} Fallback message
-	 */
 	createFallbackLink(originalUrl) {
 		const convertedLink = originalUrl.replace(/(twitter\.com|x\.com)/, 'fxtwitter.com');
 		return `\n${convertedLink}`;

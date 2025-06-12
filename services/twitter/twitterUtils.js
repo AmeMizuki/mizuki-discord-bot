@@ -1,18 +1,8 @@
-/**
- * Extracts the tweet ID from a Twitter/X URL.
- * @param {string} url The Twitter/X URL.
- * @returns {string|null} The tweet ID or null if not found.
- */
 function getTweetIdFromUrl(url) {
 	const match = url.match(/(?:twitter\.com|x\.com)\/\S+\/status\/(\d+)/);
 	return match ? match[1] : null;
 }
 
-/**
- * Fetches tweet data from the FixTweet API.
- * @param {string} tweetId The ID of the tweet.
- * @returns {Promise<object|null>} The tweet data or null if an error occurs.
- */
 async function fetchTweetData(tweetId) {
 	const { default: fetch } = await import('node-fetch');
 	try {

@@ -1,22 +1,20 @@
 const TwitterService = require('./twitter/twitterService');
+const PixivService = require('./pixiv/pixivService');
+const PttService = require('./ptt/pttService');
+const BilibiliService = require('./bilibili/bilibiliService');
+const PchomeService = require('./pchome/pchomeService');
 
 class UrlConversionService {
 	constructor() {
 		this.services = [
 			new TwitterService(),
-			// 未來可以在這裡新增其他服務，例如：
-			// new InstagramService(),
-			// new TikTokService(),
-			// new YouTubeService(),
+			new PixivService(),
+			new PttService(),
+			new BilibiliService(),
+			new PchomeService(),
 		];
 	}
 
-	/**
-	 * Processes a message and handles all supported URL conversions
-	 * @param {string} content - Message content
-	 * @param {Object} message - Discord message object
-	 * @returns {Promise<Array>} Array of processing results
-	 */
 	async processMessage(content, message) {
 		const results = [];
 
@@ -41,7 +39,7 @@ class UrlConversionService {
 						console.error(`Failed to process URL ${url}:`, error);
 						results.push({
 							type: 'error',
-							content: `處理連結時發生錯誤：${url}`,
+							content: `Error processing URL: ${url}`,
 						});
 					}
 				}
@@ -51,25 +49,25 @@ class UrlConversionService {
 		return results;
 	}
 
-	/**
-	 * Sends processing results to a Discord channel
-	 * @param {Array} results - Processing results
-	 * @param {Object} channel - Discord channel object
-	 */
-	async sendResults(results, channel) {
+	async sendResults(results, channel, originalMessage = null) {
 		for (const result of results) {
 			try {
+				let sentMessage;
 				switch (result.type) {
 				case 'embeds':
-					await channel.send({ embeds: result.content });
+					sentMessage = await channel.send({ embeds: result.content });
 					break;
 				case 'video':
 				case 'fallback':
 				case 'error':
-					await channel.send(result.content);
+					sentMessage = await channel.send(result.content);
 					break;
 				default:
 					console.warn(`Unknown result type: ${result.type}`);
+				}
+
+				if (sentMessage && originalMessage) {
+					this.storeMessageRelation(sentMessage.id, originalMessage.author.id, originalMessage.id);
 				}
 			}
 			catch (error) {
@@ -77,9 +75,43 @@ class UrlConversionService {
 			}
 		}
 	}
+
+	storeMessageRelation(botMessageId, userId, originalMessageId) {
+		// Simple in-memory storage with cleanup after 1 hour
+		if (!this.messageRelations) {
+			this.messageRelations = new Map();
+		}
+
+		this.messageRelations.set(botMessageId, {
+			userId,
+			originalMessageId,
+			timestamp: Date.now(),
+		});
+
+		// Clean up old entries (older than 1 hour)
+		const oneHourAgo = Date.now() - (60 * 60 * 1000);
+		for (const [messageId, data] of this.messageRelations.entries()) {
+			if (data.timestamp < oneHourAgo) {
+				this.messageRelations.delete(messageId);
+			}
+		}
+	}
+
+	canUserDeleteMessage(botMessageId, userId) {
+		if (!this.messageRelations) {
+			return false;
+		}
+
+		const relation = this.messageRelations.get(botMessageId);
+		return relation && relation.userId === userId;
+	}
 }
 
 module.exports = {
 	UrlConversionService,
 	TwitterService,
+	PixivService,
+	PttService,
+	BilibiliService,
+	PchomeService,
 };

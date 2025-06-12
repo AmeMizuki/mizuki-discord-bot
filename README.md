@@ -17,8 +17,13 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - ⚙️ Administrators can set monitored channels.
 - 💾 Monitored channel settings are persistently saved.
 - ⭐ **Favorite image function**: Users can favorite images via heart emoji reaction or a right-click context menu command ("Favorite Image"). Favorited images are sent to the user via private message in an aesthetically pleasing embed format, including the image itself and a link to the original message.
-- 🐦 **Twitter/X URL Conversion**: Automatically converts Twitter/X links to enhanced embeds with multiple images support.
-- 🖼️ **Multi-Image Support**: Displays multiple images from tweets in a single message using multiple embeds.
+- 🔗 **Multi-Platform URL Conversion**: Automatically converts links from various platforms to enhanced embeds:
+  - 🐦 **Twitter/X**: Enhanced embeds with multiple images support
+  - 🎨 **Pixiv**: Artwork preview with artist information
+  - 📰 **PTT**: Post preview with content formatting
+  - 📺 **Bilibili**: Video/content preview
+  - 🛒 **PChome**: Product information with images, prices, and features
+- 🖼️ **Multi-Image Support**: Displays multiple images from supported platforms in a single message using multiple embeds.
 - 🎀 Cute response tone.
 
 ## File Structure
@@ -38,6 +43,14 @@ discordbot/
 │   ├── twitter/
 │   │   ├── twitterService.js     # Twitter/X URL processing
 │   │   └── twitterUtils.js       # Twitter utility functions
+│   ├── pixiv/
+│   │   └── pixivService.js       # Pixiv artwork URL processing
+│   ├── ptt/
+│   │   └── pttService.js         # PTT post URL processing
+│   ├── bilibili/
+│   │   └── bilibiliService.js    # Bilibili video/content URL processing
+│   ├── pchome/
+│   │   └── pchomeService.js      # PChome 24h shopping URL processing
 │   └── README.md                 # Services documentation
 └── utils/
     ├── metadata.js               # Metadata parsing utilities
@@ -99,11 +112,15 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
    - Clicking the 🔍 emoji will send a private message containing the image's metadata.
    - Clicking the ❤️ emoji or using the right-click context menu command "Favorite Image" will send a private message with an aesthetically pleasing embed of the image and a link to the original message.
 
-2. **Twitter/X URL Conversion**: When someone posts a Twitter/X link, the bot will:
-   - Suppress Discord's native embed
-   - Create enhanced embeds with better formatting
-   - Display multiple images from tweets in separate embeds within the same message
-   - Handle videos by providing fxtwitter links
+2. **Multi-Platform URL Conversion**: When someone posts links from supported platforms, the bot will:
+   - Automatically detect URLs from Twitter/X, Pixiv, PTT, Bilibili, and PChome
+   - Suppress Discord's native embeds for better presentation
+   - Create enhanced embeds with platform-specific formatting
+   - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fxtwitter links
+   - **Pixiv**: Show artwork previews with artist information
+   - **PTT**: Display post content with proper formatting
+   - **Bilibili**: Provide video/content previews
+   - **PChome**: Show product information including images, names, prices, and feature highlights
    - Provide fallback links if processing fails
 
 ## Supported Image Formats
@@ -138,6 +155,14 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 2.1.0 (2025-01-28)
+
+*   **New Feature:** Completed multi-platform URL conversion system with PChome 24h shopping support.
+*   **Enhancement:** Comprehensive URL detection and processing for Twitter/X, Pixiv, PTT, Bilibili, and PChome.
+*   **Enhancement:** Platform-specific embed formatting for optimal user experience.
+*   **Architecture:** Expanded service architecture with dedicated processors for each platform.
+*   **Integration:** Unified URL conversion service managing all platform integrations.
 
 ### Version 2.0.0 (2025-01-28)
 

@@ -6,8 +6,8 @@ const { BOT_TOKEN, CLIENT_ID, MONITORED_CHANNELS } = require('./config');
 const { getMetadata } = require('./utils/metadata');
 const { sendMetadataReply, createFavoriteImageEmbed } = require('./utils/embedBuilder');
 const { UrlConversionService } = require('./services');
-const { commands, handleFindDataCommand, handleSetChannelCommand, handleViewImageInfoCommand, handleFavoriteImageCommand, handleReactMessageCommand } = require('./commands');
 const { loadReactionRoles } = require('./utils/reactionRoleStorage');
+const { commands, ...commandHandlers } = require('./commands');
 
 // 確保 Bot 有權限讀取訊息內容、訊息歷史、發送訊息、管理表情符號等
 const client = new Client({
@@ -44,23 +44,29 @@ client.on('ready', async () => {
 client.on('interactionCreate', async interaction => {
 	if (interaction.isChatInputCommand()) {
 		if (interaction.commandName === 'finddata') {
-			await handleFindDataCommand(interaction);
+			await commandHandlers.handleFindDataCommand(interaction);
 		}
 
 		if (interaction.commandName === 'setchannel') {
-			await handleSetChannelCommand(interaction);
+			await commandHandlers.handleSetChannelCommand(interaction);
 		}
 
 		if (interaction.commandName === 'reactmessage') {
-			await handleReactMessageCommand(interaction);
+			await commandHandlers.handleReactMessageCommand(interaction);
 		}
 	}
 	else if (interaction.isContextMenuCommand()) {
 		if (interaction.commandName === 'Check Image Info') {
-			await handleViewImageInfoCommand(interaction);
+			await commandHandlers.handleViewImageInfoCommand(interaction);
 		}
 		else if (interaction.commandName === 'Favorite Image') {
-			await handleFavoriteImageCommand(interaction);
+			await commandHandlers.handleFavoriteImageCommand(interaction);
+		}
+		else if (interaction.commandName === 'Delete Message') {
+			await commandHandlers.handleDeleteMessageCommand(interaction);
+		}
+		else if (interaction.commandName === 'Remove Bot Reactions') {
+			await commandHandlers.handleRemoveBotReactionsCommand(interaction);
 		}
 	}
 });
@@ -115,7 +121,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 		}
 		else {
 			try {
-				await user.send('咦？這條訊息沒有包含圖片附件耶，我沒辦法提取資訊喔～');
+				await user.send('This message has no image attachments. I cannot extract information.');
 			}
 			catch (error) {
 				console.warn(`Could not DM user ${user.tag}. Error:`, error);
@@ -174,7 +180,7 @@ client.on('messageCreate', async message => {
 	const conversionResults = await urlConversionService.processMessage(message.content, message);
 
 	if (conversionResults.length > 0) {
-		await urlConversionService.sendResults(conversionResults, message.channel);
+		await urlConversionService.sendResults(conversionResults, message.channel, message);
 	}
 
 	const monitoredChannels = MONITORED_CHANNELS;
