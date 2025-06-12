@@ -2,36 +2,70 @@ const { SlashCommandBuilder, ApplicationCommandType, ContextMenuCommandBuilder }
 const { getMetadata } = require('../utils/metadata');
 const { createMetadataEmbed, createFavoriteImageEmbed } = require('../utils/embedBuilder');
 const { loadMonitoredChannels, saveMonitoredChannels } = require('../utils/channelStorage');
+const { loadReactionRoles, saveReactionRoles } = require('../utils/reactionRoleStorage');
 
 // 建立指令定義
 const commands = [
 	new SlashCommandBuilder()
 		.setName('finddata')
-		.setDescription('查看圖片的資訊')
+		.setDescription('Check information of an image')
 		.addAttachmentOption(option =>
 			option.setName('image')
-				.setDescription('請提供圖片')
+				.setDescription('The image to check')
 				.setRequired(true),
 		),
 	new SlashCommandBuilder()
 		.setName('setchannel')
-		.setDescription('設定機器人監聽的頻道（僅管理員可用）')
-		.addChannelOption(option =>
-			option.setName('channel')
-				.setDescription('要監聽的頻道')
-				.setRequired(true),
-		)
-		.addStringOption(option =>
-			option.setName('action')
-				.setDescription('操作類型')
-				.setRequired(true)
-				.addChoices(
-					{ name: '添加頻道', value: 'add' },
-					{ name: '移除頻道', value: 'remove' },
-					{ name: '清空所有頻道', value: 'clear' },
-					{ name: '查看當前頻道', value: 'list' },
+		.setDescription('Set up channel monitoring (Admin only)')
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('add')
+				.setDescription('Add a channel to monitor')
+				.addChannelOption(option => option.setName('channel').setDescription('The channel to monitor').setRequired(true))
+				.addStringOption(option => option.setName('type').setDescription('The type of content to monitor').setRequired(true)
+					.addChoices(
+						{ name: 'Image', value: 'image' },
+						{ name: 'Text', value: 'text' },
+					),
 				),
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('remove')
+				.setDescription('Remove a channel from monitoring')
+				.addChannelOption(option => option.setName('channel').setDescription('The channel to remove').setRequired(true))
+				.addStringOption(option => option.setName('type').setDescription('The type of content to monitor').setRequired(true)
+					.addChoices(
+						{ name: 'Image', value: 'image' },
+						{ name: 'Text', value: 'text' },
+					),
+				),
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('list')
+				.setDescription('List all monitored channels'),
+		)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('clear')
+				.setDescription('Clear all monitored channels'),
 		),
+	new SlashCommandBuilder()
+		.setName('reactmessage')
+		.setDescription('Add a reaction to a specific message, optionally with role assignment (Admin only).')
+		.addStringOption(option =>
+			option.setName('message_id')
+				.setDescription('The ID of the message')
+				.setRequired(true))
+		.addStringOption(option =>
+			option.setName('emoji')
+				.setDescription('The emoji to use for the reaction')
+				.setRequired(true))
+		.addRoleOption(option =>
+			option.setName('role')
+				.setDescription('The role to assign when users react (optional)')
+				.setRequired(false)),
 	new ContextMenuCommandBuilder()
 		.setName('Check Image Info')
 		.setType(ApplicationCommandType.Message),
@@ -69,60 +103,75 @@ async function handleSetChannelCommand(interaction) {
 
 	await interaction.deferReply({ ephemeral: true });
 
-	const channel = interaction.options.getChannel('channel');
-	const action = interaction.options.getString('action');
+	const subcommand = interaction.options.getSubcommand();
 	const monitoredChannels = loadMonitoredChannels();
-
 	let responseMessage = '';
 
-	switch (action) {
+	switch (subcommand) {
 	case 'add': {
-		if (!monitoredChannels.includes(channel.id)) {
-			monitoredChannels.push(channel.id);
-			saveMonitoredChannels(monitoredChannels);
-			responseMessage = `✅ 好的！我已經把 ${channel.name} 加到監聽清單裡了～以後有圖片我就會幫忙查看！`;
+		const channel = interaction.options.getChannel('channel');
+		const type = interaction.options.getString('type');
+
+		if (!monitoredChannels[channel.id]) {
+			monitoredChannels[channel.id] = { image: false, text: false };
 		}
-		else {
-			responseMessage = `⚠️ 咦？${channel.name} 已經在我的監聽清單裡了耶～`;
-		}
+		monitoredChannels[channel.id][type] = true;
+		saveMonitoredChannels(monitoredChannels);
+		responseMessage = `✅ 好的！我已經把 ${channel.name} 的 **${type === 'image' ? '圖片' : '文字'}** 監聽加入了～`;
 		break;
 	}
-
 	case 'remove': {
-		const index = monitoredChannels.indexOf(channel.id);
-		if (index > -1) {
-			monitoredChannels.splice(index, 1);
+		const channel = interaction.options.getChannel('channel');
+		const type = interaction.options.getString('type');
+
+		if (monitoredChannels[channel.id] && monitoredChannels[channel.id][type]) {
+			monitoredChannels[channel.id][type] = false;
+			// If no more monitoring types are active for this channel, remove the channel entry.
+			if (Object.values(monitoredChannels[channel.id]).every(v => !v)) {
+				delete monitoredChannels[channel.id];
+			}
 			saveMonitoredChannels(monitoredChannels);
-			responseMessage = `✅ 好的！我已經把 ${channel.name} 從監聽清單移除了～`;
+			responseMessage = `✅ 好的！我已經把 ${channel.name} 的 **${type === 'image' ? '圖片' : '文字'}** 監聽移除了～`;
 		}
 		else {
-			responseMessage = `⚠️ 咦？${channel.name} 本來就不在我的監聽清單裡耶～`;
+			responseMessage = `⚠️ 咦？${channel.name} 本來就沒有設定 **${type === 'image' ? '圖片' : '文字'}** 監聽耶～`;
 		}
 		break;
 	}
-
 	case 'clear': {
-		saveMonitoredChannels([]);
-		responseMessage = '✅ 好的！我已經清空所有監聽頻道了～現在我不會自動監聽任何頻道的圖片，只有手動使用指令才會查看圖片資訊喔！';
+		saveMonitoredChannels({});
+		responseMessage = '✅ 好的！我已經清空所有監聽頻道了～';
 		break;
 	}
-
 	case 'list': {
-		if (monitoredChannels.length === 0) {
-			responseMessage = '📋 目前我沒有設定任何監聽頻道，所以不會自動監聽圖片。你可以使用 /finddata 指令手動查看圖片資訊喔～';
+		const channels = Object.keys(monitoredChannels);
+		if (channels.length === 0) {
+			responseMessage = '📋 目前我沒有設定任何監聽頻道。';
 		}
 		else {
-			const channelNames = [];
-			for (const channelId of monitoredChannels) {
+			const channelList = [];
+			for (const channelId of channels) {
+				const monitoredTypes = monitoredChannels[channelId];
+				const types = Object.keys(monitoredTypes).filter(t => monitoredTypes[t]);
+				if (types.length === 0) continue;
+
 				try {
 					const ch = await interaction.client.channels.fetch(channelId);
-					channelNames.push(ch.name);
+					const typeNames = types.map(t => (t === 'image' ? '圖片' : '文字')).join('、');
+					channelList.push(`• ${ch.name} (${typeNames})`);
 				}
 				catch {
-					channelNames.push(`未知頻道 (${channelId})`);
+					const typeNames = types.map(t => (t === 'image' ? '圖片' : '文字')).join('、');
+					channelList.push(`• 未知頻道 (${channelId}) (${typeNames})`);
 				}
 			}
-			responseMessage = `📋 目前我正在監聽這些頻道的圖片喔～\n${channelNames.map(name => `• ${name}`).join('\n')}`;
+
+			if (channelList.length === 0) {
+				responseMessage = '📋 目前我沒有設定任何監聽頻道。';
+			}
+			else {
+				responseMessage = `📋 目前我正在監聽這些頻道喔～\n${channelList.join('\n')}`;
+			}
 		}
 		break;
 	}
@@ -178,10 +227,92 @@ async function handleFavoriteImageCommand(interaction) {
 	await interaction.editReply({ content: '✅ 所有圖片已收藏並私訊給你囉！', ephemeral: true });
 }
 
+// Helper to get a consistent emoji identifier
+function getEmojiIdentifier(emoji) {
+	// For custom emojis, the format is <:name:id> or <a:name:id> for animated
+	const customEmoji = emoji.match(/<a?:(\w+):(\d+)>/);
+	if (customEmoji) {
+		return customEmoji[2];
+		// Use the ID for custom emojis
+	}
+	// For standard emojis, just use the emoji itself
+	return emoji;
+}
+
+async function handleReactMessageCommand(interaction) {
+	if (!interaction.member.permissions.has('Administrator')) {
+		await interaction.reply({ content: '❌ Only administrators can use this command.', ephemeral: true });
+		return;
+	}
+
+	await interaction.deferReply({ ephemeral: true });
+
+	const messageId = interaction.options.getString('message_id');
+	const emoji = interaction.options.getString('emoji');
+	const role = interaction.options.getRole('role');
+
+	let targetMessage;
+	try {
+		const channels = await interaction.guild.channels.fetch();
+		for (const channel of channels.values()) {
+			if (channel.isTextBased()) {
+				try {
+					targetMessage = await channel.messages.fetch(messageId);
+					if (targetMessage) break;
+				}
+				catch {
+					// Message not in this channel, continue searching
+				}
+			}
+		}
+
+		if (!targetMessage) {
+			await interaction.editReply({ content: `❌ Could not find a message with ID \`${messageId}\` in this server.` });
+			return;
+		}
+
+		// Add the reaction to the message
+		await targetMessage.react(emoji);
+
+		// If a role is provided, set up reaction role
+		if (role) {
+			const reactionRoles = loadReactionRoles();
+			if (!reactionRoles[targetMessage.id]) {
+				reactionRoles[targetMessage.id] = {};
+			}
+
+			const emojiIdentifier = getEmojiIdentifier(emoji);
+			if (!emojiIdentifier) {
+				await interaction.editReply({ content: '❌ Invalid emoji provided.' });
+				return;
+			}
+
+			reactionRoles[targetMessage.id][emojiIdentifier] = role.id;
+			saveReactionRoles(reactionRoles);
+
+			await interaction.editReply({ content: `✅ Successfully added reaction ${emoji} to message [here](${targetMessage.url}) with role assignment. Users reacting with ${emoji} will get the \`${role.name}\` role.` });
+		}
+		else {
+			await interaction.editReply({ content: `✅ Successfully added reaction ${emoji} to message [here](${targetMessage.url}).` });
+		}
+
+	}
+	catch (error) {
+		console.error('Error adding reaction:', error);
+		if (error.code === 10014) {
+			await interaction.editReply({ content: `❌ I cannot use the emoji \`${emoji}\`. It might be a custom emoji from a server I'm not in.` });
+		}
+		else {
+			await interaction.editReply({ content: '❌ An unexpected error occurred. Please check my permissions and try again.' });
+		}
+	}
+}
+
 module.exports = {
 	commands,
 	handleFindDataCommand,
 	handleSetChannelCommand,
 	handleViewImageInfoCommand,
 	handleFavoriteImageCommand,
+	handleReactMessageCommand,
 };

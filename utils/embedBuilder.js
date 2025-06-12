@@ -140,8 +140,96 @@ async function createFavoriteImageEmbed(imageUrl, messageUrl, user) {
 	return embed;
 }
 
+async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
+	if (!Array.isArray(imageUrls)) {
+		imageUrls = imageUrls ? [imageUrls] : [];
+	}
+
+	const embeds = [];
+
+	// If no images, create a single text-only embed
+	if (imageUrls.length === 0) {
+		const embed = new EmbedBuilder()
+			.setColor(tweetData.color || EMBED_COLORS.INFO)
+			.setAuthor({
+				name: `@${tweetData.author.screen_name} (${tweetData.author.name})`,
+				iconURL: tweetData.author.avatar_url,
+				url: `https://twitter.com/${tweetData.author.screen_name}`,
+			})
+			.setTimestamp(new Date(tweetData.created_timestamp * 1000));
+
+		if (tweetData.text) {
+			embed.setDescription(tweetData.text);
+		}
+
+		if (tweetData.likes !== undefined) {
+			embed.addFields({ name: 'Likes', value: tweetData.likes.toLocaleString(), inline: true });
+		}
+		if (tweetData.retweets !== undefined) {
+			embed.addFields({ name: 'Retweets', value: tweetData.retweets.toLocaleString(), inline: true });
+		}
+		if (tweetData.replies !== undefined) {
+			embed.addFields({ name: 'Replies', value: tweetData.replies.toLocaleString(), inline: true });
+		}
+		if (tweetData.views !== undefined && tweetData.views !== null) {
+			embed.addFields({ name: 'Views', value: tweetData.views.toLocaleString(), inline: true });
+		}
+
+		embed.addFields({
+			name: 'Source',
+			value: `[Original Tweet](${originalTweetUrl})`,
+			inline: false,
+		});
+
+		embeds.push(embed);
+	}
+	else {
+		// Create one embed for each image, following SaucyBot's pattern
+		imageUrls.forEach((imageUrl) => {
+			const embed = new EmbedBuilder()
+				.setColor(tweetData.color || EMBED_COLORS.INFO)
+				.setAuthor({
+					name: `@${tweetData.author.screen_name} (${tweetData.author.name})`,
+					iconURL: tweetData.author.avatar_url,
+					url: `https://twitter.com/${tweetData.author.screen_name}`,
+				})
+				.setTimestamp(new Date(tweetData.created_timestamp * 1000))
+				.setImage(imageUrl)
+				.setURL(originalTweetUrl);
+
+			if (tweetData.text) {
+				embed.setDescription(tweetData.text);
+			}
+
+			if (tweetData.likes !== undefined) {
+				embed.addFields({ name: 'Likes', value: tweetData.likes.toLocaleString(), inline: true });
+			}
+			if (tweetData.retweets !== undefined) {
+				embed.addFields({ name: 'Retweets', value: tweetData.retweets.toLocaleString(), inline: true });
+			}
+			if (tweetData.replies !== undefined) {
+				embed.addFields({ name: 'Replies', value: tweetData.replies.toLocaleString(), inline: true });
+			}
+			if (tweetData.views !== undefined && tweetData.views !== null) {
+				embed.addFields({ name: 'Views', value: tweetData.views.toLocaleString(), inline: true });
+			}
+
+			embed.addFields({
+				name: 'Source',
+				value: `[Original Tweet](${originalTweetUrl})`,
+				inline: false,
+			});
+
+			embeds.push(embed);
+		});
+	}
+
+	return embeds;
+}
+
 module.exports = {
 	createMetadataEmbed,
 	sendMetadataReply,
 	createFavoriteImageEmbed,
+	createTweetEmbed,
 };

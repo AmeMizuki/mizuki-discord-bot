@@ -5,12 +5,15 @@ const { REST } = require('@discordjs/rest');
 const { BOT_TOKEN, CLIENT_ID, MONITORED_CHANNELS } = require('./config');
 const { getMetadata } = require('./utils/metadata');
 const { sendMetadataReply, createFavoriteImageEmbed } = require('./utils/embedBuilder');
-const { commands, handleFindDataCommand, handleSetChannelCommand, handleViewImageInfoCommand, handleFavoriteImageCommand } = require('./commands');
+const { UrlConversionService } = require('./services');
+const { commands, handleFindDataCommand, handleSetChannelCommand, handleViewImageInfoCommand, handleFavoriteImageCommand, handleReactMessageCommand } = require('./commands');
+const { loadReactionRoles } = require('./utils/reactionRoleStorage');
 
 // 確保 Bot 有權限讀取訊息內容、訊息歷史、發送訊息、管理表情符號等
 const client = new Client({
 	intents: [
 		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMembers,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.MessageContent,
 		// 必須啟用，才能讀取訊息內容和附件
@@ -19,7 +22,7 @@ const client = new Client({
 		GatewayIntentBits.DirectMessages,
 		// 允許 Bot 私訊使用者
 	],
-	partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+	partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.GuildMember],
 	// 處理部分訊息、頻道、反應
 });
 
@@ -47,6 +50,10 @@ client.on('interactionCreate', async interaction => {
 		if (interaction.commandName === 'setchannel') {
 			await handleSetChannelCommand(interaction);
 		}
+
+		if (interaction.commandName === 'reactmessage') {
+			await handleReactMessageCommand(interaction);
+		}
 	}
 	else if (interaction.isContextMenuCommand()) {
 		if (interaction.commandName === 'Check Image Info') {
@@ -59,26 +66,20 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.on('messageReactionAdd', async (reaction, user) => {
-	if ((reaction.emoji.name === '🔍' || reaction.emoji.name === '❤️') && !user.bot) {
-		if (reaction.partial) {
-			try {
-				await reaction.fetch();
-			}
-			catch (error) {
-				console.error('Something went wrong when fetching the message:', error);
-				return;
-			}
-		}
-		if (reaction.message.partial) {
-			try {
-				await reaction.message.fetch();
-			}
-			catch (error) {
-				console.error('Something went wrong when fetching the message:', error);
-				return;
-			}
-		}
+	if (user.bot) return;
 
+	// Fetch partials
+	if (reaction.partial) {
+		try { await reaction.fetch(); }
+		catch (error) { console.error('Error fetching reaction:', error); return; }
+	}
+	if (reaction.message.partial) {
+		try { await reaction.message.fetch(); }
+		catch (error) { console.error('Error fetching message:', error); return; }
+	}
+
+	// Logic for 🔍 and ❤️ reactions
+	if (reaction.emoji.name === '🔍' || reaction.emoji.name === '❤️') {
 		const message = reaction.message;
 		const imageAttachments = message.attachments.filter(att => att.contentType && att.contentType.startsWith('image/'));
 
@@ -98,9 +99,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
 				const metadata = await getMetadata(imageAttachment.url, imageAttachment.contentType);
 
-				// Check if the reaction is for "favorite" (heart emoji)
 				if (reaction.emoji.name === '❤️') {
-					// Send only the image and message link for favorite
 					try {
 						const favoriteEmbed = await createFavoriteImageEmbed(imageAttachment.url, message.url, user);
 						await user.send({ embeds: [favoriteEmbed] });
@@ -110,7 +109,6 @@ client.on('messageReactionAdd', async (reaction, user) => {
 					}
 				}
 				else {
-					// Original behavior for magnifying glass
 					await sendMetadataReply(message.channel, user.id, metadata, null, imageAttachment.url, message.author);
 				}
 			}
@@ -124,12 +122,66 @@ client.on('messageReactionAdd', async (reaction, user) => {
 			}
 		}
 	}
+
+	// Reaction Role Logic
+	const reactionRoles = loadReactionRoles();
+	const emojiId = reaction.emoji.id || reaction.emoji.name;
+	const roleId = reactionRoles[reaction.message.id]?.[emojiId];
+
+	if (roleId) {
+		try {
+			const member = await reaction.message.guild.members.fetch(user.id);
+			await member.roles.add(roleId);
+		}
+		catch (error) {
+			console.error(`Failed to add role ${roleId} to user ${user.id}:`, error);
+		}
+	}
+});
+
+client.on('messageReactionRemove', async (reaction, user) => {
+	if (user.bot) return;
+
+	if (reaction.partial) {
+		try { await reaction.fetch(); }
+		catch (error) { console.error('Error fetching reaction:', error); return; }
+	}
+	if (reaction.message.partial) {
+		try { await reaction.message.fetch(); }
+		catch (error) { console.error('Error fetching message:', error); return; }
+	}
+
+	const reactionRoles = loadReactionRoles();
+	const emojiId = reaction.emoji.id || reaction.emoji.name;
+
+	const roleId = reactionRoles[reaction.message.id]?.[emojiId];
+	if (roleId) {
+		try {
+			const member = await reaction.message.guild.members.fetch(user.id);
+			await member.roles.remove(roleId);
+		}
+		catch (error) {
+			console.error(`Failed to remove role ${roleId} from user ${user.id}:`, error);
+		}
+	}
 });
 
 client.on('messageCreate', async message => {
 	if (message.author.bot) return;
 
-	if (MONITORED_CHANNELS.length === 0 || !MONITORED_CHANNELS.includes(message.channel.id)) {
+	// Handle URL conversions (Twitter, etc.)
+	const urlConversionService = new UrlConversionService();
+	const conversionResults = await urlConversionService.processMessage(message.content, message);
+
+	if (conversionResults.length > 0) {
+		await urlConversionService.sendResults(conversionResults, message.channel);
+	}
+
+	const monitoredChannels = MONITORED_CHANNELS;
+	const channelConfig = monitoredChannels[message.channel.id];
+
+	// Check if the channel is monitored for images
+	if (!channelConfig || !channelConfig.image) {
 		return;
 	}
 

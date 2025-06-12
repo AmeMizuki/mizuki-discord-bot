@@ -4,7 +4,7 @@
 
 Pleaese join the Discord server if encounter problem： [Mizuki Bot](https://discord.gg/avMvrhdX3r)
 
-A cute Discord bot specialized in extracting and displaying Stable Diffusion metadata information from images.
+A cute Discord bot specialized in extracting and displaying Stable Diffusion metadata information from images, with support for Twitter/X URL conversion and multi-image embeds.
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
 
@@ -16,7 +16,9 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - 💬 Replies via private message to protect user privacy.
 - ⚙️ Administrators can set monitored channels.
 - 💾 Monitored channel settings are persistently saved.
-- ⭐ Favorite image function: Users can favorite images via heart emoji reaction or a right-click context menu command ("Favorite Image"). Favorited images are sent to the user via private message in an aesthetically pleasing embed format, including the image itself and a link to the original message.
+- ⭐ **Favorite image function**: Users can favorite images via heart emoji reaction or a right-click context menu command ("Favorite Image"). Favorited images are sent to the user via private message in an aesthetically pleasing embed format, including the image itself and a link to the original message.
+- 🐦 **Twitter/X URL Conversion**: Automatically converts Twitter/X links to enhanced embeds with multiple images support.
+- 🖼️ **Multi-Image Support**: Displays multiple images from tweets in a single message using multiple embeds.
 - 🎀 Cute response tone.
 
 ## File Structure
@@ -31,6 +33,12 @@ discordbot/
 ├── monitored_channels.example.json # Example monitored channel settings
 ├── commands/
 │   └── index.js                  # Slash command handling
+├── services/                     # URL conversion services
+│   ├── index.js                  # Service manager
+│   ├── twitter/
+│   │   ├── twitterService.js     # Twitter/X URL processing
+│   │   └── twitterUtils.js       # Twitter utility functions
+│   └── README.md                 # Services documentation
 └── utils/
     ├── metadata.js               # Metadata parsing utilities
     ├── embedBuilder.js           # Discord Embed construction utilities
@@ -87,9 +95,16 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
 
 ### Automatic Features
 
-1. When someone uploads an image in a monitored channel, Akiyama Mizuki will automatically add 🔍 and ❤️ emojis.
-2. Clicking the 🔍 emoji will send a private message containing the image's metadata (without the original message link).
-3. Clicking the ❤️ emoji or using the right-click context menu command "Favorite Image" will send a private message with an aesthetically pleasing embed of the image and a link to the original message.
+1. **Image Metadata Extraction**: When someone uploads an image in a monitored channel, Akiyama Mizuki will automatically add 🔍 and ❤️ emojis.
+   - Clicking the 🔍 emoji will send a private message containing the image's metadata.
+   - Clicking the ❤️ emoji or using the right-click context menu command "Favorite Image" will send a private message with an aesthetically pleasing embed of the image and a link to the original message.
+
+2. **Twitter/X URL Conversion**: When someone posts a Twitter/X link, the bot will:
+   - Suppress Discord's native embed
+   - Create enhanced embeds with better formatting
+   - Display multiple images from tweets in separate embeds within the same message
+   - Handle videos by providing fxtwitter links
+   - Provide fallback links if processing fails
 
 ## Supported Image Formats
 
@@ -104,6 +119,16 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
 - `utils/embedBuilder.js` - Constructs Discord embed messages.
 - `utils/channelStorage.js` - Handles persistent storage of monitored channel settings.
 - `commands/index.js` - Handles slash command logic.
+- `services/` - **NEW**: Modular URL conversion services architecture.
+
+### Adding New URL Conversion Services
+
+The bot now supports a modular architecture for URL conversion services. To add new services (Instagram, TikTok, etc.):
+
+1. Create a new service directory: `services/[service-name]/`
+2. Implement the service class following the pattern in `services/twitter/twitterService.js`
+3. Register the service in `services/index.js`
+4. See `services/README.md` for detailed instructions
 
 ### Adding New Features
 
@@ -113,6 +138,18 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 2.0.0 (2025-01-28)
+
+*   **Major Refactor:** Implemented modular URL conversion services architecture.
+*   **New Feature:** Twitter/X URL conversion with enhanced embeds.
+*   **New Feature:** Multi-image support for tweets using multiple embeds per message.
+*   **Enhancement:** Automatic suppression of Discord's native Twitter embeds.
+*   **Enhancement:** Support for videos via fxtwitter fallback links.
+*   **Architecture:** Created `services/` directory for organized URL conversion services.
+*   **Architecture:** Moved Twitter-related utilities to `services/twitter/`.
+*   **Architecture:** Implemented `UrlConversionService` for unified URL processing.
+*   **Documentation:** Added comprehensive `services/README.md` for service development.
 
 ### Version 1.1.0 (2024-07-26)
 

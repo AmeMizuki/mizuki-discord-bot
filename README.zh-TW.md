@@ -4,7 +4,7 @@
 
 如果你遇到任何問題請加入 Discord 伺服器發問： [瑞希 Bot](https://discord.gg/avMvrhdX3r)
 
-一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊。
+一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊，並支援 Twitter/X 連結轉換和多圖片嵌入功能。
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
 
@@ -16,7 +16,9 @@
 - 💬 私訊回覆，保護用戶隱私
 - ⚙️ 管理員可設定監聽頻道
 - 💾 監聽頻道設定會持久化保存
-- ⭐ 收藏圖片功能：使用者可以透過愛心表情符號反應或右鍵應用程式集指令（「Favorite Image」）來收藏圖片。收藏的圖片會以美觀的嵌入式訊息格式透過私訊傳送給使用者，其中包含圖片本身及原始訊息連結。
+- ⭐ **收藏圖片功能**：使用者可以透過愛心表情符號反應或右鍵應用程式集指令（「Favorite Image」）來收藏圖片。收藏的圖片會以美觀的嵌入式訊息格式透過私訊傳送給使用者，其中包含圖片本身及原始訊息連結。
+- 🐦 **Twitter/X 連結轉換**：自動轉換 Twitter/X 連結為增強型嵌入訊息，支援多圖片顯示。
+- 🖼️ **多圖片支援**：在單一訊息中使用多個嵌入區塊顯示推文的多張圖片。
 - 🎀 可愛的回應語氣
 
 ## 檔案結構
@@ -31,6 +33,12 @@ discordbot/
 ├── monitored_channels.example.json # 監聽頻道設定範例
 ├── commands/
 │   └── index.js                  # 斜線指令處理
+├── services/                     # 網址轉換服務
+│   ├── index.js                  # 服務管理器
+│   ├── twitter/
+│   │   ├── twitterService.js     # Twitter/X 網址處理
+│   │   └── twitterUtils.js       # Twitter 工具函式
+│   └── README.md                 # 服務架構說明文件
 └── utils/
     ├── metadata.js               # Metadata 解析工具
     ├── embedBuilder.js           # Discord Embed 建構工具
@@ -87,9 +95,16 @@ node index.js
 
 ### 自動功能
 
-1. 當有人在監聽頻道上傳圖片時，曉山瑞希會自動添加 🔍 和 ❤️ 表情符號。
-2. 點擊 🔍 表情符號後，會收到包含圖片 metadata 的私訊（不含原始訊息連結）。
-3. 點擊 ❤️ 表情符號或使用右鍵應用程式集指令「Favorite Image」後，會收到包含美觀圖片 Embed 及原始訊息連結的私訊。
+1. **圖片 Metadata 提取**：當有人在監聽頻道上傳圖片時，曉山瑞希會自動添加 🔍 和 ❤️ 表情符號。
+   - 點擊 🔍 表情符號後，會收到包含圖片 metadata 的私訊。
+   - 點擊 ❤️ 表情符號或使用右鍵應用程式集指令「Favorite Image」後，會收到包含美觀圖片 Embed 及原始訊息連結的私訊。
+
+2. **Twitter/X 連結轉換**：當有人發送 Twitter/X 連結時，機器人會：
+   - 抑制 Discord 的原生嵌入
+   - 建立格式更佳的增強型嵌入訊息
+   - 在同一訊息中使用多個嵌入區塊顯示推文的多張圖片
+   - 透過提供 fxtwitter 連結來處理影片
+   - 在處理失敗時提供備用連結
 
 ## 支援的圖片格式
 
@@ -104,6 +119,16 @@ node index.js
 - `utils/embedBuilder.js` - 建構 Discord embed 訊息
 - `utils/channelStorage.js` - 處理監聽頻道的持久化存儲
 - `commands/index.js` - 處理斜線指令邏輯
+- `services/` - **新增**：模組化網址轉換服務架構
+
+### 新增網址轉換服務
+
+機器人現在支援模組化的網址轉換服務架構。要新增新的服務（Instagram、TikTok 等）：
+
+1. 建立新的服務目錄：`services/[服務名稱]/`
+2. 按照 `services/twitter/twitterService.js` 的模式實作服務類別
+3. 在 `services/index.js` 中註冊服務
+4. 詳細說明請參考 `services/README.md`
 
 ### 新增功能
 
@@ -113,6 +138,18 @@ node index.js
 3. 使用 `module.exports` 導出需要的函式
 
 ## 更新日誌 (Changelog)
+
+### 版本 2.0.0 (2025-01-28)
+
+*   **重大重構：** 實作模組化網址轉換服務架構。
+*   **新增功能：** Twitter/X 連結轉換，提供增強型嵌入訊息。
+*   **新增功能：** 推文多圖片支援，在單一訊息中使用多個嵌入區塊。
+*   **功能強化：** 自動抑制 Discord 的原生 Twitter 嵌入。
+*   **功能強化：** 透過 fxtwitter 備用連結支援影片。
+*   **架構改進：** 建立 `services/` 目錄，組織化網址轉換服務。
+*   **架構改進：** 將 Twitter 相關工具移至 `services/twitter/`。
+*   **架構改進：** 實作 `UrlConversionService` 統一網址處理。
+*   **文件更新：** 新增完整的 `services/README.md` 服務開發指南。
 
 ### 版本 1.1.0 (2024-07-26)
 
