@@ -196,7 +196,7 @@ When adding new features, please follow modular principles:
 *   **Architecture:** Implemented `UrlConversionService` for unified URL processing.
 *   **Documentation:** Added comprehensive `services/README.md` for service development.
 
-### Version 1.0.0 (2024-06-10)
+### Version 1.0.0 (2025-06-10)
 
 *   **New Feature:** Added image favoriting feature via heart emoji reaction.
 *   **New Feature:** Added "Favorite Image" right-click context menu command.
