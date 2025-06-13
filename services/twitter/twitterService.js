@@ -30,7 +30,7 @@ class TwitterService {
 		// Handle videos
 		if (tweetData.media && tweetData.media.videos && tweetData.media.videos.length > 0) {
 			return {
-				type: 'video',
+				type: 'fallback',
 				content: this.createFallbackLink(url),
 			};
 		}
