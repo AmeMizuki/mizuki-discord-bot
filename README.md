@@ -25,6 +25,7 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
   - 🛒 **PChome**: Product information with images, prices, and features
 - 🖼️ **Multi-Image Support**: Displays multiple images from supported platforms in a single message using multiple embeds.
 - 🎀 Cute response tone.
+- 💰 **Steam Sale Notifications**: Automatically fetch and display Steam game sale information and push notifications to a designated channel.
 
 ## File Structure
 
@@ -55,7 +56,8 @@ discordbot/
 └── utils/
     ├── metadata.js               # Metadata parsing utilities
     ├── embedBuilder.js           # Discord Embed construction utilities
-    └── channelStorage.js         # Channel settings persistence utilities
+    ├── channelStorage.js         # Channel settings persistence utilities
+    └── steamStorage.js           # Steam game data persistence utilities
 ```
 
 ## Installation and Setup
@@ -123,6 +125,8 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
    - **PChome**: Show product information including images, names, prices, and feature highlights
    - Provide fallback links if processing fails
 
+3. **Steam Sale Notifications**: Automatically fetch the latest Steam game sale information daily and send notifications to a designated channel. Users can also manually query for sale information using a slash command.
+
 ## Supported Image Formats
 
 - PNG - Supports tEXt and zTXt chunks.
@@ -156,7 +160,13 @@ When adding new features, please follow modular principles:
 
 ## Changelog
 
-### Version 2.1.0 (2025-01-28)
+### Version 1.4.0 (2024-06-13)
+
+*   **New Feature:** Added Steam game sale notification feature.
+*   **Enhancement:** Implemented daily automatic fetching and pushing of Steam sale information.
+*   **Architecture:** Added `services/steam/` for Steam API integration and `utils/steamStorage.js` for data persistence.
+
+### Version 1.2.2 (2025-06-12)
 
 *   **New Feature:** Completed multi-platform URL conversion system with PChome 24h shopping support.
 *   **Enhancement:** Comprehensive URL detection and processing for Twitter/X, Pixiv, PTT, Bilibili, and PChome.
@@ -164,7 +174,7 @@ When adding new features, please follow modular principles:
 *   **Architecture:** Expanded service architecture with dedicated processors for each platform.
 *   **Integration:** Unified URL conversion service managing all platform integrations.
 
-### Version 2.0.0 (2025-01-28)
+### Version 1.2.0 (2025-06-11)
 
 *   **Major Refactor:** Implemented modular URL conversion services architecture.
 *   **New Feature:** Twitter/X URL conversion with enhanced embeds.
@@ -176,7 +186,7 @@ When adding new features, please follow modular principles:
 *   **Architecture:** Implemented `UrlConversionService` for unified URL processing.
 *   **Documentation:** Added comprehensive `services/README.md` for service development.
 
-### Version 1.1.0 (2024-07-26)
+### Version 1.0.0 (2024-06-10)
 
 *   **New Feature:** Added image favoriting feature via heart emoji reaction.
 *   **New Feature:** Added "Favorite Image" right-click context menu command.

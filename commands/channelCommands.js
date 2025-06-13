@@ -1,51 +1,39 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { loadMonitoredChannels, saveMonitoredChannels } = require('../utils/channelStorage');
 
-// Channel monitoring commands
+// Image monitoring commands
 const channelCommands = [
 	new SlashCommandBuilder()
-		.setName('setchannel')
-		.setDescription('Set up channel monitoring (Admin only)')
+		.setName('setimage')
+		.setDescription('設定圖片檢閱功能 (Admin only)')
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('add')
-				.setDescription('Add a channel to monitor')
-				.addChannelOption(option => option.setName('channel').setDescription('The channel to monitor').setRequired(true))
-				.addStringOption(option => option.setName('type').setDescription('The type of content to monitor').setRequired(true)
-					.addChoices(
-						{ name: 'Image', value: 'image' },
-						{ name: 'Text', value: 'text' },
-					),
-				),
+				.setDescription('在指定頻道開始檢閱圖片')
+				.addChannelOption(option => option.setName('channel').setDescription('要檢閱的頻道').setRequired(true)),
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('remove')
-				.setDescription('Remove a channel from monitoring')
-				.addChannelOption(option => option.setName('channel').setDescription('The channel to remove').setRequired(true))
-				.addStringOption(option => option.setName('type').setDescription('The type of content to monitor').setRequired(true)
-					.addChoices(
-						{ name: 'Image', value: 'image' },
-						{ name: 'Text', value: 'text' },
-					),
-				),
+				.setDescription('停止在指定頻道檢閱圖片')
+				.addChannelOption(option => option.setName('channel').setDescription('要停止檢閱的頻道').setRequired(true)),
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('list')
-				.setDescription('List all monitored channels'),
+				.setDescription('列出所有檢閱圖片的頻道'),
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('clear')
-				.setDescription('Clear all monitored channels'),
+				.setDescription('清除所有檢閱圖片的頻道'),
 		),
 ];
 
-// 處理 setchannel 指令
-async function handleSetChannelCommand(interaction) {
+// Handle setimage command
+async function handleSetImageCommand(interaction) {
 	if (!interaction.member.permissions.has('Administrator')) {
-		await interaction.reply({ content: '❌ Only administrators can use this command.', ephemeral: true });
+		await interaction.reply({ content: '❌ 只有管理員可以使用此指令。', ephemeral: true });
 		return;
 	}
 
@@ -58,68 +46,70 @@ async function handleSetChannelCommand(interaction) {
 	switch (subcommand) {
 	case 'add': {
 		const channel = interaction.options.getChannel('channel');
-		const type = interaction.options.getString('type');
 
 		if (!monitoredChannels[channel.id]) {
 			monitoredChannels[channel.id] = { image: false, text: false };
 		}
-		monitoredChannels[channel.id][type] = true;
-		saveMonitoredChannels(monitoredChannels);
-		responseMessage = `✅ I have added monitoring for ${channel.name} for **${type === 'image' ? 'images' : 'text'}**.`;
+
+		if (monitoredChannels[channel.id].image) {
+			responseMessage = `⚠️ ${channel.name} 已經在檢閱圖片了。`;
+		}
+		else {
+			monitoredChannels[channel.id].image = true;
+			saveMonitoredChannels(monitoredChannels);
+			responseMessage = `✅ 已開始在 ${channel.name} 檢閱圖片。`;
+		}
 		break;
 	}
 	case 'remove': {
 		const channel = interaction.options.getChannel('channel');
-		const type = interaction.options.getString('type');
 
-		if (monitoredChannels[channel.id] && monitoredChannels[channel.id][type]) {
-			monitoredChannels[channel.id][type] = false;
-			// If no more monitoring types are active for this channel, remove the channel entry.
+		if (monitoredChannels[channel.id] && monitoredChannels[channel.id].image) {
+			monitoredChannels[channel.id].image = false;
+			// If no more monitoring types are active for this channel, remove the channel entry
 			if (Object.values(monitoredChannels[channel.id]).every(v => !v)) {
 				delete monitoredChannels[channel.id];
 			}
 			saveMonitoredChannels(monitoredChannels);
-			responseMessage = `✅ I have removed monitoring for ${channel.name} for **${type === 'image' ? 'images' : 'text'}**.`;
+			responseMessage = `✅ 已停止在 ${channel.name} 檢閱圖片。`;
 		}
 		else {
-			responseMessage = `⚠️ ${channel.name} was not set up for **${type === 'image' ? 'images' : 'text'}** monitoring.`;
+			responseMessage = `⚠️ ${channel.name} 沒有在檢閱圖片。`;
 		}
 		break;
 	}
 	case 'clear': {
-		saveMonitoredChannels({});
-		responseMessage = '✅ I have cleared all monitoring channels.';
+		// Only clear image monitoring, keep text monitoring if any
+		const updatedChannels = {};
+		for (const [channelId, config] of Object.entries(monitoredChannels)) {
+			if (config.text) {
+				updatedChannels[channelId] = { image: false, text: true };
+			}
+		}
+		saveMonitoredChannels(updatedChannels);
+		responseMessage = '✅ 已清除所有檢閱圖片的頻道。';
 		break;
 	}
 	case 'list': {
-		const channels = Object.keys(monitoredChannels);
-		if (channels.length === 0) {
-			responseMessage = '📋 I have not set up any monitoring channels.';
+		const imageChannels = Object.keys(monitoredChannels).filter(
+			channelId => monitoredChannels[channelId].image,
+		);
+
+		if (imageChannels.length === 0) {
+			responseMessage = '📋 目前沒有檢閱圖片的頻道。';
 		}
 		else {
 			const channelList = [];
-			for (const channelId of channels) {
-				const monitoredTypes = monitoredChannels[channelId];
-				const types = Object.keys(monitoredTypes).filter(t => monitoredTypes[t]);
-				if (types.length === 0) continue;
-
+			for (const channelId of imageChannels) {
 				try {
 					const ch = await interaction.client.channels.fetch(channelId);
-					const typeNames = types.map(t => (t === 'image' ? 'images' : 'text')).join('、');
-					channelList.push(`• ${ch.name} (${typeNames})`);
+					channelList.push(`• ${ch.name}`);
 				}
 				catch {
-					const typeNames = types.map(t => (t === 'image' ? 'images' : 'text')).join('、');
-					channelList.push(`• Unknown channel (${channelId}) (${typeNames})`);
+					channelList.push(`• 未知頻道 (${channelId})`);
 				}
 			}
-
-			if (channelList.length === 0) {
-				responseMessage = '📋 I have not set up any monitoring channels.';
-			}
-			else {
-				responseMessage = `📋 I am currently monitoring these channels:\n${channelList.join('\n')}`;
-			}
+			responseMessage = `📋 目前檢閱圖片的頻道：\n${channelList.join('\n')}`;
 		}
 		break;
 	}
@@ -130,5 +120,5 @@ async function handleSetChannelCommand(interaction) {
 
 module.exports = {
 	channelCommands,
-	handleSetChannelCommand,
+	handleSetImageCommand,
 };

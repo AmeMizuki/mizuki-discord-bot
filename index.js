@@ -8,6 +8,8 @@ const { sendMetadataReply, createFavoriteImageEmbed } = require('./utils/embedBu
 const { UrlConversionService } = require('./services');
 const { loadReactionRoles } = require('./utils/reactionRoleStorage');
 const { commands, ...commandHandlers } = require('./commands');
+const { loadSteamMonitoredChannels } = require('./utils/steamStorage');
+const SteamService = require('./services/steam/steamService');
 
 // 確保 Bot 有權限讀取訊息內容、訊息歷史、發送訊息、管理表情符號等
 const client = new Client({
@@ -26,6 +28,9 @@ const client = new Client({
 	// 處理部分訊息、頻道、反應
 });
 
+// Steam service instance
+const steamService = new SteamService();
+
 client.on('ready', async () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 
@@ -39,33 +44,94 @@ client.on('ready', async () => {
 	catch (error) {
 		console.error(error);
 	}
+
+	// Start Steam deals monitoring
+	startSteamMonitoring();
 });
+
+// Steam monitoring function
+async function checkSteamDeals() {
+	try {
+		const monitoredChannels = loadSteamMonitoredChannels();
+		if (monitoredChannels.length === 0) {
+			return;
+		}
+
+		const newDeals = await steamService.getNewDeals();
+		if (newDeals.length === 0) {
+			return;
+		}
+
+		console.log(`Found ${newDeals.length} new Steam deals`);
+		const message = await steamService.createDealsMessage(newDeals);
+
+		// Send to all monitored channels
+		for (const channelId of monitoredChannels) {
+			try {
+				const channel = await client.channels.fetch(channelId);
+				if (channel) {
+					await channel.send(message);
+				}
+			}
+			catch (error) {
+				console.error(`Failed to send Steam deals to channel ${channelId}:`, error);
+			}
+		}
+	}
+	catch (error) {
+		console.error('Error checking Steam deals:', error);
+	}
+}
+
+function startSteamMonitoring() {
+	const DAILY_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
+	const now = new Date();
+	const targetHour = 5;
+
+	let initialDelay = 0;
+	const nextCheck = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, 0, 0, 0);
+
+	if (now.getHours() >= targetHour) {
+		nextCheck.setDate(nextCheck.getDate() + 1);
+	}
+
+	initialDelay = nextCheck.getTime() - now.getTime();
+
+	console.log(`Starting Steam deals monitoring. Next check scheduled for ${nextCheck.toLocaleString()}.`);
+
+	setTimeout(() => {
+		checkSteamDeals();
+		setInterval(() => {
+			checkSteamDeals();
+		}, DAILY_CHECK_INTERVAL);
+	}, initialDelay);
+}
 
 client.on('interactionCreate', async interaction => {
 	if (interaction.isChatInputCommand()) {
-		if (interaction.commandName === 'finddata') {
-			await commandHandlers.handleFindDataCommand(interaction);
-		}
-
-		if (interaction.commandName === 'setchannel') {
-			await commandHandlers.handleSetChannelCommand(interaction);
+		if (interaction.commandName === 'setimage') {
+			await commandHandlers.handleSetImageCommand(interaction);
 		}
 
 		if (interaction.commandName === 'reactmessage') {
 			await commandHandlers.handleReactMessageCommand(interaction);
 		}
+
+		if (interaction.commandName === 'steam') {
+			await commandHandlers.handleSteamCommand(interaction);
+		}
 	}
 	else if (interaction.isContextMenuCommand()) {
-		if (interaction.commandName === 'Check Image Info') {
+		if (interaction.commandName === '檢查圖片資訊') {
 			await commandHandlers.handleViewImageInfoCommand(interaction);
 		}
-		else if (interaction.commandName === 'Favorite Image') {
+		else if (interaction.commandName === '收藏圖片') {
 			await commandHandlers.handleFavoriteImageCommand(interaction);
 		}
-		else if (interaction.commandName === 'Delete Message') {
+		else if (interaction.commandName === '刪除訊息') {
 			await commandHandlers.handleDeleteMessageCommand(interaction);
 		}
-		else if (interaction.commandName === 'Remove Bot Reactions') {
+		else if (interaction.commandName === '移除機器人反應') {
 			await commandHandlers.handleRemoveBotReactionsCommand(interaction);
 		}
 	}

@@ -1,12 +1,12 @@
-const { ApplicationCommandType, ContextMenuCommandBuilder } = require('discord.js');
+const { ApplicationCommandType, ContextMenuCommandBuilder, ChannelType } = require('discord.js');
 
 // Message management commands
 const messageCommands = [
 	new ContextMenuCommandBuilder()
-		.setName('Delete Message')
+		.setName('刪除訊息')
 		.setType(ApplicationCommandType.Message),
 	new ContextMenuCommandBuilder()
-		.setName('Remove Bot Reactions')
+		.setName('移除機器人反應')
 		.setType(ApplicationCommandType.Message),
 ];
 
@@ -18,13 +18,26 @@ async function handleDeleteMessageCommand(interaction) {
 
 	// Check if the message was sent by the bot
 	if (!message.author.bot || message.author.id !== interaction.client.user.id) {
-		await interaction.editReply({ content: '❌ I can only delete my own messages.', ephemeral: true });
+		await interaction.editReply({ content: '❌ 我只能刪除自己的訊息。', ephemeral: true });
+		return;
+	}
+
+	// If in a DM channel and it's the bot's message, allow deletion directly
+	if (interaction.channel.type === ChannelType.DM) {
+		try {
+			await message.delete();
+			await interaction.editReply({ content: '✅ 訊息已成功刪除！', ephemeral: true });
+		}
+		catch (error) {
+			console.error('Failed to delete DM message:', error);
+			await interaction.editReply({ content: '❌ 無法刪除 DM 訊息。這可能是由於權限不足或訊息已刪除。', ephemeral: true });
+		}
 		return;
 	}
 
 	// Check if the user has permission to delete the message
 	// Allow if user is admin or if user was the original requester of the URL conversion
-	const isAdmin = interaction.member.permissions.has('Administrator');
+	const isAdmin = interaction.member ? interaction.member.permissions.has('Administrator') : false;
 
 	// Use the UrlConversionService to check if user can delete
 	const { UrlConversionService } = require('../services');
@@ -37,17 +50,17 @@ async function handleDeleteMessageCommand(interaction) {
 	const canDelete = isAdmin || canDeleteViaService || canDeleteFallback;
 
 	if (!canDelete) {
-		await interaction.editReply({ content: '❌ You do not have permission to delete this message. Only administrators or the original sender can delete.', ephemeral: true });
+		await interaction.editReply({ content: '❌ 您沒有權限刪除此訊息。只有管理員或原始發送者可以刪除。', ephemeral: true });
 		return;
 	}
 
 	try {
 		await message.delete();
-		await interaction.editReply({ content: '✅ Message deleted successfully!', ephemeral: true });
+		await interaction.editReply({ content: '✅ 訊息已成功刪除！', ephemeral: true });
 	}
 	catch (error) {
 		console.error('Failed to delete message:', error);
-		await interaction.editReply({ content: '❌ Failed to delete message. This may be due to insufficient permissions or the message has already been deleted.', ephemeral: true });
+		await interaction.editReply({ content: '❌ 無法刪除訊息。這可能是由於權限不足或訊息已刪除。', ephemeral: true });
 	}
 }
 
@@ -59,10 +72,10 @@ async function handleRemoveBotReactionsCommand(interaction) {
 
 	// Check if the user is the author of the message or an admin
 	const isMessageAuthor = message.author.id === interaction.user.id;
-	const isAdmin = interaction.member.permissions.has('Administrator');
+	const isAdmin = interaction.member ? interaction.member.permissions.has('Administrator') : false;
 
 	if (!isMessageAuthor && !isAdmin) {
-		await interaction.editReply({ content: '❌ You can only remove reactions from your own messages, or you need administrator permissions.', ephemeral: true });
+		await interaction.editReply({ content: '❌ 您只能移除自己的訊息上的反應，或您需要管理員權限。', ephemeral: true });
 		return;
 	}
 
@@ -88,15 +101,15 @@ async function handleRemoveBotReactionsCommand(interaction) {
 		}
 
 		if (removedCount > 0) {
-			await interaction.editReply({ content: `✅ Successfully removed ${removedCount} bot reactions!`, ephemeral: true });
+			await interaction.editReply({ content: `✅ 成功移除 ${removedCount} 個機器人反應！`, ephemeral: true });
 		}
 		else {
-			await interaction.editReply({ content: '🤔 No bot reactions found on this message.', ephemeral: true });
+			await interaction.editReply({ content: '🤔 此訊息上沒有機器人反應。', ephemeral: true });
 		}
 	}
 	catch (error) {
 		console.error('Failed to remove bot reactions:', error);
-		await interaction.editReply({ content: '❌ Failed to remove bot reactions. This may be due to insufficient permissions.', ephemeral: true });
+		await interaction.editReply({ content: '❌ 無法移除機器人反應。這可能是由於權限不足。', ephemeral: true });
 	}
 }
 

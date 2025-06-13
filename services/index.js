@@ -3,6 +3,10 @@ const PixivService = require('./pixiv/pixivService');
 const PttService = require('./ptt/pttService');
 const BilibiliService = require('./bilibili/bilibiliService');
 const PchomeService = require('./pchome/pchomeService');
+const RedditService = require('./reddit/redditService');
+const CivitaiService = require('./civitai/civitaiService');
+const { AttachmentBuilder } = require('discord.js');
+const { URL } = require('url');
 
 class UrlConversionService {
 	constructor() {
@@ -12,7 +16,25 @@ class UrlConversionService {
 			new PttService(),
 			new BilibiliService(),
 			new PchomeService(),
+			new RedditService(),
+			new CivitaiService(),
 		];
+		this.deniedDomains = [
+			'exampledenied.com',
+			'anothersite.net',
+		];
+	}
+
+	isUrlDenied(url) {
+		try {
+			const parsedUrl = new URL(url);
+			const hostname = parsedUrl.hostname;
+			return this.deniedDomains.some(deniedDomain => hostname.includes(deniedDomain));
+		}
+		catch (error) {
+			console.error('Error parsing URL for deny list check:', error);
+			return false;
+		}
 	}
 
 	async processMessage(content, message) {
@@ -21,7 +43,14 @@ class UrlConversionService {
 		for (const service of this.services) {
 			const urls = service.detectUrls(content);
 			if (urls.length > 0) {
-				// Suppress Discord's native embeds for detected URLs
+				// Filter out denied URLs before processing
+				const allowedUrls = urls.filter(url => !this.isUrlDenied(url));
+
+				if (allowedUrls.length === 0) {
+					continue;
+				}
+
+				// Suppress Discord's native embeds only if there are allowed URLs to process
 				try {
 					await message.suppressEmbeds(true);
 				}
@@ -30,7 +59,7 @@ class UrlConversionService {
 				}
 
 				// Process each URL
-				for (const url of urls) {
+				for (const url of allowedUrls) {
 					try {
 						const result = await service.processUrl(url);
 						results.push(result);
@@ -54,10 +83,52 @@ class UrlConversionService {
 			try {
 				let sentMessage;
 				switch (result.type) {
+				case 'text':
+					sentMessage = await channel.send(result.content);
+					break;
 				case 'embeds':
-					sentMessage = await channel.send({ embeds: result.content });
+					if (result.attachmentUrl) {
+						try {
+							const attachment = new AttachmentBuilder(result.attachmentUrl);
+							sentMessage = await channel.send({ embeds: result.content, files: [attachment] });
+						}
+						catch (attachError) {
+							console.error('Failed to send attachment with embed:', attachError);
+							sentMessage = await channel.send({ embeds: result.content });
+						}
+					}
+					else {
+						sentMessage = await channel.send({ embeds: result.content });
+					}
 					break;
 				case 'video':
+					try {
+						const attachment = new AttachmentBuilder(result.content);
+						sentMessage = await channel.send({ files: [attachment] });
+					}
+					catch (attachError) {
+						console.error('Failed to send video attachment:', attachError);
+						sentMessage = await channel.send(`無法預覽影片，但這是連結： ${result.content}`);
+					}
+					break;
+				case 'video_with_embed':
+					try {
+						const attachment = new AttachmentBuilder(result.videoUrl);
+						sentMessage = await channel.send({ embeds: [result.embed], files: [attachment] });
+					}
+					catch (attachError) {
+						console.error('Failed to send video with embed:', attachError);
+						// Fallback: send embed only
+						try {
+							sentMessage = await channel.send({ embeds: [result.embed] });
+							await channel.send(`影片連結： ${result.videoUrl}`);
+						}
+						catch (embedError) {
+							console.error('Failed to send embed fallback:', embedError);
+							sentMessage = await channel.send(`無法預覽影片，但這是連結： ${result.videoUrl}`);
+						}
+					}
+					break;
 				case 'fallback':
 				case 'error':
 					sentMessage = await channel.send(result.content);
@@ -114,4 +185,6 @@ module.exports = {
 	PttService,
 	BilibiliService,
 	PchomeService,
+	RedditService,
+	CivitaiService,
 };

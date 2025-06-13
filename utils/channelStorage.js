@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const STORAGE_FILE = path.join(__dirname, '..', 'monitored_channels.json');
+const STORAGE_FILE = path.join(__dirname, '..', 'image_channels.json');
 
 // Save monitored channels to file
 function saveMonitoredChannels(channels) {

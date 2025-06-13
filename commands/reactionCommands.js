@@ -5,35 +5,35 @@ const { loadReactionRoles, saveReactionRoles } = require('../utils/reactionRoleS
 const reactionCommands = [
 	new SlashCommandBuilder()
 		.setName('reactmessage')
-		.setDescription('Manage reactions on messages (Admin only)')
+		.setDescription('管理訊息上的反應 (Admin only)')
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('add')
-				.setDescription('Add a reaction to a specific message, optionally with role assignment')
+				.setDescription('在指定訊息上新增反應，可選擇分配角色')
 				.addStringOption(option =>
 					option.setName('message_id')
-						.setDescription('The ID of the message')
+						.setDescription('訊息的 ID')
 						.setRequired(true))
 				.addStringOption(option =>
 					option.setName('emoji')
-						.setDescription('The emoji to use for the reaction')
+						.setDescription('要使用的表情符號')
 						.setRequired(true))
 				.addRoleOption(option =>
 					option.setName('role')
-						.setDescription('The role to assign when users react (optional)')
+						.setDescription('要分配的身分組 (可選)')
 						.setRequired(false)),
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('delete')
-				.setDescription('Remove a reaction from a specific message')
+				.setDescription('從指定訊息上移除反應')
 				.addStringOption(option =>
 					option.setName('message_id')
-						.setDescription('The ID of the message')
+						.setDescription('訊息的 ID')
 						.setRequired(true))
 				.addStringOption(option =>
 					option.setName('emoji')
-						.setDescription('The emoji to remove from the reaction')
+						.setDescription('要移除的表情符號')
 						.setRequired(true)),
 		),
 ];
@@ -50,7 +50,7 @@ function getEmojiIdentifier(emoji) {
 
 async function handleReactMessageCommand(interaction) {
 	if (!interaction.member.permissions.has('Administrator')) {
-		await interaction.reply({ content: '❌ Only administrators can use this command.', ephemeral: true });
+		await interaction.reply({ content: '❌ 只有管理員可以使用此指令。', ephemeral: true });
 		return;
 	}
 
@@ -76,7 +76,7 @@ async function handleReactMessageCommand(interaction) {
 		}
 
 		if (!targetMessage) {
-			await interaction.editReply({ content: `❌ Message with ID \`${messageId}\` not found.` });
+			await interaction.editReply({ content: `❌ 找不到 ID 為 \`${messageId}\` 的訊息。` });
 			return;
 		}
 
@@ -95,17 +95,17 @@ async function handleReactMessageCommand(interaction) {
 
 				const emojiIdentifier = getEmojiIdentifier(emoji);
 				if (!emojiIdentifier) {
-					await interaction.editReply({ content: '❌ Invalid emoji provided.' });
+					await interaction.editReply({ content: '❌ 無效的表情符號。' });
 					return;
 				}
 
 				reactionRoles[targetMessage.id][emojiIdentifier] = role.id;
 				saveReactionRoles(reactionRoles);
 
-				await interaction.editReply({ content: `✅ Successfully added reaction ${emoji} to message [here](${targetMessage.url}) with role assignment. Users reacting with ${emoji} will get the \`${role.name}\` role.` });
+				await interaction.editReply({ content: `✅ 成功在訊息 [這裡](${targetMessage.url}) 上新增反應 ${emoji}，並分配角色。使用 ${emoji} 反應的使用者將獲得 \`${role.name}\` 身分組。` });
 			}
 			else {
-				await interaction.editReply({ content: `✅ Successfully added reaction ${emoji} to message [here](${targetMessage.url}).` });
+				await interaction.editReply({ content: `✅ 成功在訊息 [這裡](${targetMessage.url}) 上新增反應 ${emoji}。` });
 			}
 		}
 		else if (subcommand === 'delete') {
@@ -144,10 +144,10 @@ async function handleReactMessageCommand(interaction) {
 			}
 
 			if (removed) {
-				await interaction.editReply({ content: `✅ Successfully removed reaction ${emoji} from message [here](${targetMessage.url}).` });
+				await interaction.editReply({ content: `✅ 成功從訊息 [這裡](${targetMessage.url}) 上移除反應 ${emoji}。` });
 			}
 			else {
-				await interaction.editReply({ content: `⚠️ No reaction ${emoji} found on this message, or the bot did not react to this emoji.` });
+				await interaction.editReply({ content: `⚠️ 找不到訊息 [這裡](${targetMessage.url}) 上的反應 ${emoji}，或機器人未反應此表情符號。` });
 			}
 		}
 
@@ -155,10 +155,10 @@ async function handleReactMessageCommand(interaction) {
 	catch (error) {
 		console.error('Error managing reaction:', error);
 		if (error.code === 10014) {
-			await interaction.editReply({ content: `❌ I cannot use the emoji \`${emoji}\`. It may be a custom emoji from a server I am not in.` });
+			await interaction.editReply({ content: `❌ 我無法使用表情符號 \`${emoji}\`。它可能是來自我不在的伺服器的自定義表情符號。` });
 		}
 		else {
-			await interaction.editReply({ content: '❌ An unexpected error occurred. Please check my permissions and try again.' });
+			await interaction.editReply({ content: '❌ 發生意外錯誤。請檢查我的權限並重試。' });
 		}
 	}
 }

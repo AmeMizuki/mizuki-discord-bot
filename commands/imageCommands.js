@@ -1,46 +1,18 @@
-const { SlashCommandBuilder, ApplicationCommandType, ContextMenuCommandBuilder } = require('discord.js');
+const { ApplicationCommandType, ContextMenuCommandBuilder } = require('discord.js');
 const { getMetadata } = require('../utils/metadata');
 const { createMetadataEmbed, createFavoriteImageEmbed } = require('../utils/embedBuilder');
 
 // Image-related commands
 const imageCommands = [
-	new SlashCommandBuilder()
-		.setName('finddata')
-		.setDescription('Check information of an image')
-		.addAttachmentOption(option =>
-			option.setName('image')
-				.setDescription('The image to check')
-				.setRequired(true),
-		),
 	new ContextMenuCommandBuilder()
-		.setName('Check Image Info')
+		.setName('檢查圖片資訊')
 		.setType(ApplicationCommandType.Message),
 	new ContextMenuCommandBuilder()
-		.setName('Favorite Image')
+		.setName('收藏圖片')
 		.setType(ApplicationCommandType.Message),
 ];
 
-// 處理 finddata 指令
-async function handleFindDataCommand(interaction) {
-	await interaction.deferReply({ ephemeral: true });
-
-	const imageAttachment = interaction.options.getAttachment('image');
-
-	if (!imageAttachment || !imageAttachment.contentType.startsWith('image/')) {
-		await interaction.editReply({ content: 'Please provide a valid image file.', ephemeral: true });
-		return;
-	}
-
-	const metadata = await getMetadata(imageAttachment.url, imageAttachment.contentType);
-	const embed = await createMetadataEmbed(metadata, interaction.user, imageAttachment.url);
-
-	await interaction.editReply({
-		embeds: [embed],
-		ephemeral: true,
-	});
-}
-
-// 處理 View Image Info 指令
+// Handle View Image Info command
 async function handleViewImageInfoCommand(interaction) {
 	await interaction.deferReply({ ephemeral: true });
 
@@ -48,7 +20,7 @@ async function handleViewImageInfoCommand(interaction) {
 	const imageAttachments = message.attachments.filter(attachment => attachment.contentType && attachment.contentType.startsWith('image/'));
 
 	if (imageAttachments.size === 0) {
-		await interaction.editReply({ content: '❌ This message has no image attachments.', ephemeral: true });
+		await interaction.editReply({ content: '❌ 這則訊息沒有圖片附件。', ephemeral: true });
 		return;
 	}
 
@@ -58,7 +30,7 @@ async function handleViewImageInfoCommand(interaction) {
 		await interaction.user.send({ embeds: [embed] });
 	}
 
-	await interaction.editReply({ content: '✅ I have sent the information of all images to you.', ephemeral: true });
+	await interaction.editReply({ content: '✅ 我已經將所有圖片的資訊發送給你。', ephemeral: true });
 }
 
 // Handle the "Favorite Image" context menu command
@@ -69,7 +41,7 @@ async function handleFavoriteImageCommand(interaction) {
 	const imageAttachments = message.attachments.filter(attachment => attachment.contentType && attachment.contentType.startsWith('image/'));
 
 	if (imageAttachments.size === 0) {
-		await interaction.editReply({ content: '❌ This message has no image attachments. I cannot collect it.', ephemeral: true });
+		await interaction.editReply({ content: '❌ 這則訊息沒有圖片附件。我無法收藏它。', ephemeral: true });
 		return;
 	}
 
@@ -80,16 +52,15 @@ async function handleFavoriteImageCommand(interaction) {
 		}
 		catch (error) {
 			console.error('Failed to send favorite image via context menu to user:', error);
-			await interaction.user.send({ content: `Failed to collect the image. Please check your privacy settings or try again. Image link: ${imageAttachment.url}`, ephemeral: true });
+			await interaction.user.send({ content: `收藏圖片失敗。請檢查您的隱私設定或重試。圖片連結：${imageAttachment.url}`, ephemeral: true });
 		}
 	}
 
-	await interaction.editReply({ content: '✅ All images have been collected and sent to you.', ephemeral: true });
+	await interaction.editReply({ content: '✅ 所有圖片已經被收藏並發送給你。', ephemeral: true });
 }
 
 module.exports = {
 	imageCommands,
-	handleFindDataCommand,
 	handleViewImageInfoCommand,
 	handleFavoriteImageCommand,
 };

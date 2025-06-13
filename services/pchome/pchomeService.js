@@ -83,9 +83,9 @@ class PchomeService {
 				.setImage(imageUrl)
 				.setFooter({ text: 'Powered by PChome 24h 購物' });
 
-			const fields = [{ name: 'Price', value: priceDisplay }];
+			const fields = [{ name: '💰 價格', value: priceDisplay }];
 			if (sloganText) {
-				fields.push({ name: 'Features', value: sloganText });
+				fields.push({ name: '🔍 特點', value: sloganText });
 			}
 			embed.addFields(fields);
 

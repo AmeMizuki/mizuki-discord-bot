@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const STORAGE_FILE = path.join(__dirname, '..', 'reaction_roles.json');
+const STORAGE_FILE = path.join(__dirname, '..', 'reactroles.json');
 
 // Load reaction roles from file
 function loadReactionRoles() {

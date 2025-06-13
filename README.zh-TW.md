@@ -25,6 +25,7 @@
   - 🛒 **PChome**：商品資訊包含圖片、價格和特色
 - 🖼️ **多圖片支援**：在單一訊息中使用多個嵌入區塊顯示支援平台的多張圖片。
 - 🎀 可愛的回應語氣
+- 💰 **Steam 特賣通知**：自動抓取並顯示 Steam 遊戲特賣資訊，並推播通知到指定頻道。
 
 ## 檔案結構
 
@@ -56,6 +57,7 @@ discordbot/
     ├── metadata.js               # Metadata 解析工具
     ├── embedBuilder.js           # Discord Embed 建構工具
     └── channelStorage.js         # 頻道設定持久化工具
+    └── steamStorage.js           # Steam 遊戲資料持久化工具
 ```
 
 ## 安裝與設定
@@ -123,6 +125,8 @@ node index.js
    - **PChome**：顯示商品資訊包含圖片、名稱、價格和特色標語
    - 在處理失敗時提供備用連結
 
+3. **Steam 特賣通知**：每日自動抓取最新的 Steam 遊戲特賣資訊，並發送通知到指定頻道。使用者也可以透過斜線指令手動查詢特賣資訊。
+
 ## 支援的圖片格式
 
 - PNG - 支援 tEXt 和 zTXt chunks
@@ -155,6 +159,12 @@ node index.js
 3. 使用 `module.exports` 導出需要的函式
 
 ## 更新日誌 (Changelog)
+
+### 版本 2.2.0 (2024-06-13)
+
+*   **新增功能：** 新增 Steam 遊戲特賣通知功能。
+*   **功能強化：** 實作每日自動抓取與推播 Steam 特賣資訊。
+*   **架構改進：** 新增 `services/steam/` 用於 Steam API 整合，以及 `utils/steamStorage.js` 用於資料持久化。
 
 ### 版本 2.1.0 (2025-01-28)
 
