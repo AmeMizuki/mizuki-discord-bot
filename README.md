@@ -30,6 +30,8 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - [x] PTT
 - [x] Bilibili
 - [x] PChome
+- [x] Civitai
+- [x] Reddit
 - [x] E-Hentai & ExHentai
 
 ## File Structure

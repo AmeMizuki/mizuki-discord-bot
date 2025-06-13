@@ -30,6 +30,8 @@
 - [x] PTT
 - [x] Bilibili
 - [x] PChome
+- [x] Civitai
+- [x] Reddit
 - [x] E-Hentai & ExHentai
 
 ## 檔案結構
