@@ -163,20 +163,20 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 		}
 
 		if (tweetData.likes !== undefined) {
-			embed.addFields({ name: 'Likes', value: tweetData.likes.toLocaleString(), inline: true });
+			embed.addFields({ name: '❤️ Likes', value: tweetData.likes.toLocaleString(), inline: true });
 		}
 		if (tweetData.retweets !== undefined) {
-			embed.addFields({ name: 'Retweets', value: tweetData.retweets.toLocaleString(), inline: true });
+			embed.addFields({ name: '🔁 Retweets', value: tweetData.retweets.toLocaleString(), inline: true });
 		}
 		if (tweetData.replies !== undefined) {
-			embed.addFields({ name: 'Replies', value: tweetData.replies.toLocaleString(), inline: true });
+			embed.addFields({ name: '💬 Replies', value: tweetData.replies.toLocaleString(), inline: true });
 		}
 		if (tweetData.views !== undefined && tweetData.views !== null) {
-			embed.addFields({ name: 'Views', value: tweetData.views.toLocaleString(), inline: true });
+			embed.addFields({ name: '👀 Views', value: tweetData.views.toLocaleString(), inline: true });
 		}
 
 		embed.addFields({
-			name: 'Source',
+			name: '🔗 Source',
 			value: `[Original Tweet](${originalTweetUrl})`,
 			inline: false,
 		});
@@ -202,21 +202,21 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 			}
 
 			if (tweetData.likes !== undefined) {
-				embed.addFields({ name: 'Likes', value: tweetData.likes.toLocaleString(), inline: true });
+				embed.addFields({ name: '❤️ Likes', value: tweetData.likes.toLocaleString(), inline: true });
 			}
 			if (tweetData.retweets !== undefined) {
-				embed.addFields({ name: 'Retweets', value: tweetData.retweets.toLocaleString(), inline: true });
+				embed.addFields({ name: '🔁 Retweets', value: tweetData.retweets.toLocaleString(), inline: true });
 			}
 			if (tweetData.replies !== undefined) {
-				embed.addFields({ name: 'Replies', value: tweetData.replies.toLocaleString(), inline: true });
+				embed.addFields({ name: '💬 Replies', value: tweetData.replies.toLocaleString(), inline: true });
 			}
 			if (tweetData.views !== undefined && tweetData.views !== null) {
-				embed.addFields({ name: 'Views', value: tweetData.views.toLocaleString(), inline: true });
+				embed.addFields({ name: '👀 Views', value: tweetData.views.toLocaleString(), inline: true });
 			}
 
 			embed.addFields({
-				name: 'Source',
-				value: `[Original Tweet](${originalTweetUrl})`,
+				name: '🔗 Source',
+				value: `[X (Twitter)](${originalTweetUrl})`,
 				inline: false,
 			});
 

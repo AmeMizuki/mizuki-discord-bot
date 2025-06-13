@@ -1,10 +1,12 @@
 [繁體中文](README.zh-TW.md) | [English](README.md)
 
+***
+
 # Akiyama Mizuki Discord Bot
 
 Pleaese join the Discord server if encounter problem： [Mizuki Bot](https://discord.gg/avMvrhdX3r)
 
-A cute Discord bot specialized in extracting and displaying Stable Diffusion metadata information from images, with support for Twitter/X URL conversion and multi-image embeds.
+A cute Discord bot specialized in extracting and displaying Stable Diffusion metadata information from images, with support for multi-platform URL conversion and embeds.
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
 
@@ -17,15 +19,18 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - ⚙️ Administrators can set monitored channels.
 - 💾 Monitored channel settings are persistently saved.
 - ⭐ **Favorite image function**: Users can favorite images via heart emoji reaction or a right-click context menu command ("Favorite Image"). Favorited images are sent to the user via private message in an aesthetically pleasing embed format, including the image itself and a link to the original message.
-- 🔗 **Multi-Platform URL Conversion**: Automatically converts links from various platforms to enhanced embeds:
-  - 🐦 **Twitter/X**: Enhanced embeds with multiple images support
-  - 🎨 **Pixiv**: Artwork preview with artist information
-  - 📰 **PTT**: Post preview with content formatting
-  - 📺 **Bilibili**: Video/content preview
-  - 🛒 **PChome**: Product information with images, prices, and features
+- 🔗 **Multi-Platform URL Conversion**: Automatically converts links from various platforms to enhanced embeds.
 - 🖼️ **Multi-Image Support**: Displays multiple images from supported platforms in a single message using multiple embeds.
-- 🎀 Cute response tone.
 - 💰 **Steam Sale Notifications**: Automatically fetch and display Steam game sale information and push notifications to a designated channel.
+- 🎀 Cute response tone.
+
+## Supported Features
+- [x] Twitter/X
+- [x] Pixiv
+- [x] PTT
+- [x] Bilibili
+- [x] PChome
+- [x] E-Hentai & ExHentai
 
 ## File Structure
 
@@ -52,6 +57,8 @@ discordbot/
 │   │   └── bilibiliService.js    # Bilibili video/content URL processing
 │   ├── pchome/
 │   │   └── pchomeService.js      # PChome 24h shopping URL processing
+│   ├── ehentai/
+│   │   └── ehentaiService.js     # E-Hentai & ExHentai URL processing
 │   └── README.md                 # Services documentation
 └── utils/
     ├── metadata.js               # Metadata parsing utilities
@@ -165,6 +172,9 @@ When adding new features, please follow modular principles:
 *   **New Feature:** Added Steam game sale notification feature.
 *   **Enhancement:** Implemented daily automatic fetching and pushing of Steam sale information.
 *   **Architecture:** Added `services/steam/` for Steam API integration and `utils/steamStorage.js` for data persistence.
+*   **New Feature:** Added E-Hentai & ExHentai URL conversion support for manga and illustration previews.
+*   **Enhancement:** Pixiv manga and illustration previews.
+*   **Enhancement:** Platform-specific embed formatting for optimal user experience.
 
 ### Version 1.2.2 (2025-06-12)
 

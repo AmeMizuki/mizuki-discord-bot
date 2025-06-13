@@ -1,10 +1,12 @@
 [English](README.md) | [繁體中文](README.zh-TW.md)
 
+***
+
 # 曉山瑞希 Discord Bot
 
 如果你遇到任何問題請加入 Discord 伺服器發問： [瑞希 Bot](https://discord.gg/avMvrhdX3r)
 
-一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊，並支援 Twitter/X 連結轉換和多圖片嵌入功能。
+一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊，並支援多平台網址轉換和多圖片嵌入功能。
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
 
@@ -17,15 +19,18 @@
 - ⚙️ 管理員可設定監聽頻道
 - 💾 監聽頻道設定會持久化保存
 - ⭐ **收藏圖片功能**：使用者可以透過愛心表情符號反應或右鍵應用程式集指令（「Favorite Image」）來收藏圖片。收藏的圖片會以美觀的嵌入式訊息格式透過私訊傳送給使用者，其中包含圖片本身及原始訊息連結。
-- 🔗 **多平台網址轉換**：自動轉換各種平台連結為增強型嵌入訊息：
-  - 🐦 **Twitter/X**：增強型嵌入訊息，支援多圖片顯示
-  - 🎨 **Pixiv**：作品預覽與作者資訊
-  - 📰 **PTT**：文章預覽與內容格式化
-  - 📺 **Bilibili**：影片/內容預覽
-  - 🛒 **PChome**：商品資訊包含圖片、價格和特色
+- 🔗 **多平台網址轉換**：自動轉換各種平台連結為增強型嵌入訊息。
 - 🖼️ **多圖片支援**：在單一訊息中使用多個嵌入區塊顯示支援平台的多張圖片。
-- 🎀 可愛的回應語氣
 - 💰 **Steam 特賣通知**：自動抓取並顯示 Steam 遊戲特賣資訊，並推播通知到指定頻道。
+- 🎀 可愛的回應語氣
+
+## 支援平台
+- [x] Twitter/X
+- [x] Pixiv
+- [x] PTT
+- [x] Bilibili
+- [x] PChome
+- [x] E-Hentai & ExHentai
 
 ## 檔案結構
 
@@ -52,6 +57,8 @@ discordbot/
 │   │   └── bilibiliService.js    # Bilibili 影片/內容網址處理
 │   ├── pchome/
 │   │   └── pchomeService.js      # PChome 24h購物網址處理
+│   ├── ehentai/
+│   │   └── ehentaiService.js     # E-Hentai & ExHentai URL 處理
 │   └── README.md                 # 服務架構說明文件
 └── utils/
     ├── metadata.js               # Metadata 解析工具
@@ -165,6 +172,8 @@ node index.js
 *   **新增功能：** 新增 Steam 遊戲特賣通知功能。
 *   **功能強化：** 實作每日自動抓取與推播 Steam 特賣資訊。
 *   **架構改進：** 新增 `services/steam/` 用於 Steam API 整合，以及 `utils/steamStorage.js` 用於資料持久化。
+*   **新增功能：** 新增 E-Hentai & ExHentai URL 轉換支援漫畫及插圖作品預覽。
+*   **功能強化：** Pixiv 漫畫及插圖作品預覽。
 
 ### 版本 2.1.0 (2025-01-28)
 
