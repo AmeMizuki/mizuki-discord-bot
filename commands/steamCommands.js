@@ -6,38 +6,33 @@ const SteamService = require('../services/steam/steamService');
 const steamCommands = [
 	new SlashCommandBuilder()
 		.setName('steam')
-		.setDescription('Steam Deals Info (Admin only)')
+		.setDescription('Steam 特賣追蹤 (Admin only)')
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('monitor')
-				.setDescription('Start listening Steam Deals in this channel'),
+				.setDescription('開始追蹤 Steam 特賣'),
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('unmonitor')
-				.setDescription('Stop listening Steam Deals in this channel'),
-		)
-		.addSubcommand(subcommand =>
-			subcommand
-				.setName('list')
-				.setDescription('List all channels listening Steam Deals'),
+				.setDescription('停止追蹤 Steam 特賣'),
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('test')
-				.setDescription('Test Steam Deals function, display current deals'),
+				.setDescription('測試 Steam 特賣追蹤功能，顯示當前特賣'),
 		)
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('clear')
-				.setDescription('Clear all Steam Deals channels'),
+				.setDescription('清除所有 Steam 特賣追蹤頻道'),
 		),
 ];
 
 // Handle steam command
 async function handleSteamCommand(interaction) {
 	if (!interaction.member.permissions.has('Administrator')) {
-		await interaction.reply({ content: '❌ Only admins can use this command.', ephemeral: true });
+		await interaction.reply({ content: '❌ 只有管理員可以使用此指令。', ephemeral: true });
 		return;
 	}
 
@@ -51,12 +46,12 @@ async function handleSteamCommand(interaction) {
 	case 'monitor': {
 		const channelId = interaction.channel.id;
 		if (monitoredChannels.includes(channelId)) {
-			responseMessage = '⚠️ This channel is already listening to Steam Deals.';
+			responseMessage = '⚠️ 此頻道已經在追蹤 Steam 特賣。';
 		}
 		else {
 			monitoredChannels.push(channelId);
 			saveSteamMonitoredChannels(monitoredChannels);
-			responseMessage = `✅ Started listening to Steam Deals in ${interaction.channel.name}.`;
+			responseMessage = `✅ 開始追蹤 Steam 特賣於 ${interaction.channel.name}.`;
 		}
 		break;
 	}
@@ -66,35 +61,16 @@ async function handleSteamCommand(interaction) {
 		if (index > -1) {
 			monitoredChannels.splice(index, 1);
 			saveSteamMonitoredChannels(monitoredChannels);
-			responseMessage = `✅ Stopped listening to Steam Deals in ${interaction.channel.name}.`;
+			responseMessage = `✅ 停止追蹤 Steam 特賣於 ${interaction.channel.name}.`;
 		}
 		else {
-			responseMessage = '⚠️ This channel is not listening to Steam Deals.';
+			responseMessage = '⚠️ 此頻道未在追蹤 Steam 特賣。';
 		}
 		break;
 	}
 	case 'clear': {
 		saveSteamMonitoredChannels([]);
-		responseMessage = '✅ Cleared all Steam Deals channels.';
-		break;
-	}
-	case 'list': {
-		if (monitoredChannels.length === 0) {
-			responseMessage = '📋 No channels are listening to Steam Deals.';
-		}
-		else {
-			const channelList = [];
-			for (const channelId of monitoredChannels) {
-				try {
-					const channel = await interaction.client.channels.fetch(channelId);
-					channelList.push(`• ${channel.name}`);
-				}
-				catch {
-					channelList.push(`• Unknown channel (${channelId})`);
-				}
-			}
-			responseMessage = `📋 Currently listening to Steam Deals channels:\n${channelList.join('\n')}`;
-		}
+		responseMessage = '✅ 清除所有 Steam 特賣追蹤頻道。';
 		break;
 	}
 	case 'test': {
@@ -103,13 +79,13 @@ async function handleSteamCommand(interaction) {
 			const deals = await steamService.fetchCurrentDeals();
 			const message = await steamService.createDealsMessage(deals.slice(0, 3), 3);
 
-			await interaction.editReply({ content: '🎮 **Steam Deals Test** - Here are the current deals:' });
+			await interaction.editReply({ content: '🎮 **Steam 特賣測試** - 以下是當前特賣：' });
 			await interaction.followUp(message);
 			return;
 		}
 		catch (error) {
-			console.error('Error testing Steam deals:', error);
-			responseMessage = '❌ Error testing Steam Deals.';
+			console.error('Steam 特賣測試錯誤:', error);
+			responseMessage = '❌ 測試 Steam 特賣時發生錯誤。';
 		}
 		break;
 	}

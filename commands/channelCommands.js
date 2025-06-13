@@ -20,11 +20,6 @@ const channelCommands = [
 		)
 		.addSubcommand(subcommand =>
 			subcommand
-				.setName('list')
-				.setDescription('列出所有檢閱圖片的頻道'),
-		)
-		.addSubcommand(subcommand =>
-			subcommand
 				.setName('clear')
 				.setDescription('清除所有檢閱圖片的頻道'),
 		),
@@ -88,29 +83,6 @@ async function handleSetImageCommand(interaction) {
 		}
 		saveMonitoredChannels(updatedChannels);
 		responseMessage = '✅ 已清除所有檢閱圖片的頻道。';
-		break;
-	}
-	case 'list': {
-		const imageChannels = Object.keys(monitoredChannels).filter(
-			channelId => monitoredChannels[channelId].image,
-		);
-
-		if (imageChannels.length === 0) {
-			responseMessage = '📋 目前沒有檢閱圖片的頻道。';
-		}
-		else {
-			const channelList = [];
-			for (const channelId of imageChannels) {
-				try {
-					const ch = await interaction.client.channels.fetch(channelId);
-					channelList.push(`• ${ch.name}`);
-				}
-				catch {
-					channelList.push(`• 未知頻道 (${channelId})`);
-				}
-			}
-			responseMessage = `📋 目前檢閱圖片的頻道：\n${channelList.join('\n')}`;
-		}
 		break;
 	}
 	}
