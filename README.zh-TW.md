@@ -22,6 +22,7 @@
 - 🔗 **多平台網址轉換**：自動轉換各種平台連結為增強型嵌入訊息。
 - 🖼️ **多圖片支援**：在單一訊息中使用多個嵌入區塊顯示支援平台的多張圖片。
 - 💰 **Steam 特賣通知**：自動抓取並顯示 Steam 遊戲特賣資訊，並推播通知到指定頻道。
+- 🎬 **YouTube 頻道追蹤**：監控指定的 YouTube 頻道，以便在新影片上傳或直播開始時，發送純連結通知到指定的 Discord 頻道。
 - 🎀 可愛的回應語氣
 
 ## 支援平台
@@ -33,6 +34,7 @@
 - [x] Civitai
 - [x] Reddit
 - [x] E-Hentai & ExHentai
+- [x] YouTube
 
 ## 檔案結構
 
@@ -42,8 +44,6 @@ discordbot/
 ├── config.js                     # 配置檔案
 ├── package.json                  # 依賴管理
 ├── .env                          # 環境變數（需自行創建）
-├── monitored_channels.json       # 監聽頻道設定（自動生成，已加入 .gitignore）
-├── monitored_channels.example.json # 監聽頻道設定範例
 ├── commands/
 │   └── index.js                  # 斜線指令處理
 ├── services/                     # 網址轉換服務
@@ -116,6 +116,9 @@ node index.js
   - `action: 移除頻道` - 從監聽清單移除頻道
   - `action: 清空所有頻道` - 清空監聽清單（不會監聽任何頻道）
   - `action: 查看當前頻道` - 查看目前監聽的頻道
+- `/youtube` - YouTube 頻道追蹤 (僅管理員可用)
+  - `add [channel_id]` - 開始追蹤一個 YouTube 頻道的新影片和直播通知。需要 YouTube 頻道 ID（例如：`UC...`）。
+  - `remove [channel_id]` - 停止追蹤一個 YouTube 頻道。需要 YouTube 頻道 ID。
 
 ### 自動功能
 
@@ -135,6 +138,8 @@ node index.js
    - 在處理失敗時提供備用連結
 
 3. **Steam 特賣通知**：每日自動抓取最新的 Steam 遊戲特賣資訊，並發送通知到指定頻道。使用者也可以透過斜線指令手動查詢特賣資訊。
+
+4. **YouTube 通知**：當在追蹤的 YouTube 頻道偵測到新影片或直播時，會發送純連結通知到指定的 Discord 頻道，格式為：「新的{直播/影片}上傳囉！ {頻道名稱} : {連結}」。
 
 ## 支援的圖片格式
 
@@ -168,6 +173,15 @@ node index.js
 3. 使用 `module.exports` 導出需要的函式
 
 ## 更新日誌 (Changelog)
+
+### 版本 1.5.0 (2024-07-XX)
+
+*   **新增功能：** 新增 YouTube 頻道追蹤功能。
+*   **功能強化：** YouTube 新影片和直播通知現在以純連結形式發送，格式為「新的{直播/影片}上傳囉！ {頻道名稱} : {連結}」。
+*   **指令變更：**
+    *   `/youtube add` 現在需要 YouTube 頻道 ID。
+    *   `/youtube remove` 現在需要 YouTube 頻道 ID。
+    *   `/youtube list` 子指令已被移除。
 
 ### 版本 1.4.0 (2024-06-13)
 
@@ -208,4 +222,4 @@ node index.js
 
 ## 授權
 
-此專案僅供學習和個人使用。 
+此專案僅供學習和個人使用。

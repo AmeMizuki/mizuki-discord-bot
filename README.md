@@ -22,6 +22,7 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - 🔗 **Multi-Platform URL Conversion**: Automatically converts links from various platforms to enhanced embeds.
 - 🖼️ **Multi-Image Support**: Displays multiple images from supported platforms in a single message using multiple embeds.
 - 💰 **Steam Sale Notifications**: Automatically fetch and display Steam game sale information and push notifications to a designated channel.
+- 🎬 **YouTube Channel Tracking**: Monitors specified YouTube channels for new video uploads and livestreams, sending plain link notifications to a designated Discord channel.
 - 🎀 Cute response tone.
 
 ## Supported Features
@@ -33,6 +34,7 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - [x] Civitai
 - [x] Reddit
 - [x] E-Hentai & ExHentai
+- [x] YouTube
 
 ## File Structure
 
@@ -42,8 +44,6 @@ discordbot/
 ├── config.js                     # Configuration file
 ├── package.json                  # Dependency management
 ├── .env                          # Environment variables (needs to be created manually)
-├── monitored_channels.json       # Monitored channel settings (auto-generated, added to .gitignore)
-├── monitored_channels.example.json # Example monitored channel settings
 ├── commands/
 │   └── index.js                  # Slash command handling
 ├── services/                     # URL conversion services
@@ -116,6 +116,9 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
   - `action: Remove Channel` - Remove a channel from the monitored list.
   - `action: Clear All Channels` - Clear the monitored list (bot will not monitor any channels automatically).
   - `action: View Current Channels` - View currently monitored channels.
+- `/youtube` - YouTube Channel Tracking (Admin only).
+  - `add [channel_id]` - Start tracking a YouTube channel for new video and livestream notifications. Requires the YouTube Channel ID (e.g., `UC...`).
+  - `remove [channel_id]` - Stop tracking a YouTube channel. Requires the YouTube Channel ID.
 
 ### Automatic Features
 
@@ -135,6 +138,8 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
    - Provide fallback links if processing fails
 
 3. **Steam Sale Notifications**: Automatically fetch the latest Steam game sale information daily and send notifications to a designated channel. Users can also manually query for sale information using a slash command.
+
+4. **YouTube Notifications**: When a new video or livestream is detected on a tracked YouTube channel, a plain link notification will be sent to the designated Discord channel in the format: "New {video/livestream} upload! {Channel Name} : {Link}".
 
 ## Supported Image Formats
 
@@ -169,6 +174,15 @@ When adding new features, please follow modular principles:
 
 ## Changelog
 
+### Version 1.5.0 (2024-07-XX)
+
+*   **New Feature:** Added YouTube channel tracking.
+*   **Enhancement:** YouTube new video and livestream notifications are now sent as plain links in the format "New {video/livestream} upload! {Channel Name} : {Link}".
+*   **Command Changes:**
+    *   `/youtube add` now requires a YouTube Channel ID.
+    *   `/youtube remove` now requires a YouTube Channel ID.
+    *   The `/youtube list` subcommand has been removed.
+
 ### Version 1.4.0 (2024-06-13)
 
 *   **New Feature:** Added Steam game sale notification feature.
@@ -183,7 +197,7 @@ When adding new features, please follow modular principles:
 *   **New Feature:** Completed multi-platform URL conversion system with PChome 24h shopping support.
 *   **Enhancement:** Comprehensive URL detection and processing for Twitter/X, Pixiv, PTT, Bilibili, and PChome.
 *   **Enhancement:** Platform-specific embed formatting for optimal user experience.
-*   **Architecture:** Expanded service architecture with dedicated processors for each platform.
+*   **Architecture:** Expanded service architecture, for each platform with dedicated processors.
 *   **Integration:** Unified URL conversion service managing all platform integrations.
 
 ### Version 1.2.0 (2025-06-11)
