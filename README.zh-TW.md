@@ -119,6 +119,7 @@ node index.js
 - `/youtube` - YouTube 頻道追蹤 (僅管理員可用)
   - `add [channel_id]` - 開始追蹤一個 YouTube 頻道的新影片和直播通知。需要 YouTube 頻道 ID（例如：`UC...`）。
   - `remove [channel_id]` - 停止追蹤一個 YouTube 頻道。需要 YouTube 頻道 ID。
+  - 📖 **[詳細 YouTube 頻道監控使用指南](youtube-channel.md)** - 完整說明如何獲取頻道 ID 和使用監控功能。
 
 ### 自動功能
 
@@ -130,7 +131,7 @@ node index.js
    - 自動偵測來自 Twitter/X、Pixiv、PTT、Bilibili 和 PChome 的網址
    - 抑制 Discord 的原生嵌入以提供更佳呈現效果
    - 建立平台專屬格式的增強型嵌入訊息
-   - **Twitter/X**：在多個嵌入區塊中顯示推文的多張圖片，透過 fxtwitter 連結處理影片
+   - **Twitter/X**：在多個嵌入區塊中顯示推文的多張圖片，透過 fxtwitter 連結處理影片，並具備 vxtwitter 自動備用機制
    - **Pixiv**：顯示作品預覽與作者資訊
    - **PTT**：顯示文章內容與適當格式化
    - **Bilibili**：提供影片/內容預覽
@@ -174,7 +175,16 @@ node index.js
 
 ## 更新日誌 (Changelog)
 
-### 版本 1.5.0 (2024-07-XX)
+### 版本 1.5.1 (2025-01-03)
+
+*   **功能強化：** 實現 Twitter/X 網址處理的自動備用機制。
+*   **可靠性提升：** 當 fxtwitter API 失效或無法使用時，自動切換至 vxtwitter API 作為備用。
+*   **數據相容性：** 自動數據格式轉換確保 API 間的無縫切換。
+*   **錯誤處理：** 改進錯誤處理機制，包含超時保護和內容驗證。
+*   **日誌記錄：** 增強日誌記錄以追蹤 API 使用情況和備用場景。
+*   **架構更新：** 更新 `services/twitter/twitterUtils.js`，支援雙 API 和格式轉換工具。
+
+### 版本 1.5.0 (2025-06-25)
 
 *   **新增功能：** 新增 YouTube 頻道追蹤功能。
 *   **功能強化：** YouTube 新影片和直播通知現在以純連結形式發送，格式為「新的{直播/影片}上傳囉！ {頻道名稱} : {連結}」。
@@ -183,7 +193,7 @@ node index.js
     *   `/youtube remove` 現在需要 YouTube 頻道 ID。
     *   `/youtube list` 子指令已被移除。
 
-### 版本 1.4.0 (2024-06-13)
+### 版本 1.4.0 (2025-06-13)
 
 *   **新增功能：** 新增 Steam 遊戲特賣通知功能。
 *   **功能強化：** 實作每日自動抓取與推播 Steam 特賣資訊。

@@ -119,6 +119,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
 - `/youtube` - YouTube Channel Tracking (Admin only).
   - `add [channel_id]` - Start tracking a YouTube channel for new video and livestream notifications. Requires the YouTube Channel ID (e.g., `UC...`).
   - `remove [channel_id]` - Stop tracking a YouTube channel. Requires the YouTube Channel ID.
+  - 📖 **[Detailed YouTube Channel Monitoring Guide](youtube-channel-en.md)** - Complete guide on how to get Channel ID and use monitoring features.
 
 ### Automatic Features
 
@@ -130,7 +131,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
    - Automatically detect URLs from Twitter/X, Pixiv, PTT, Bilibili, and PChome
    - Suppress Discord's native embeds for better presentation
    - Create enhanced embeds with platform-specific formatting
-   - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fxtwitter links
+   - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fxtwitter links with automatic vxtwitter fallback
    - **Pixiv**: Show artwork previews with artist information
    - **PTT**: Display post content with proper formatting
    - **Bilibili**: Provide video/content previews
@@ -174,7 +175,16 @@ When adding new features, please follow modular principles:
 
 ## Changelog
 
-### Version 1.5.0 (2024-07-XX)
+### Version 1.5.1 (2025-01-03)
+
+*   **Enhancement:** Implemented automatic fallback mechanism for Twitter/X URL processing.
+*   **Reliability:** Added vxtwitter API as backup when fxtwitter API fails or is unavailable.
+*   **Data Compatibility:** Automatic data format conversion ensures seamless switching between APIs.
+*   **Error Handling:** Improved error handling with timeout protection and content validation.
+*   **Logging:** Enhanced logging to track API usage and fallback scenarios.
+*   **Architecture:** Updated `services/twitter/twitterUtils.js` with dual API support and format conversion utilities.
+
+### Version 1.5.0 (2025-06-25)
 
 *   **New Feature:** Added YouTube channel tracking.
 *   **Enhancement:** YouTube new video and livestream notifications are now sent as plain links in the format "New {video/livestream} upload! {Channel Name} : {Link}".
@@ -183,7 +193,7 @@ When adding new features, please follow modular principles:
     *   `/youtube remove` now requires a YouTube Channel ID.
     *   The `/youtube list` subcommand has been removed.
 
-### Version 1.4.0 (2024-06-13)
+### Version 1.4.0 (2025-06-13)
 
 *   **New Feature:** Added Steam game sale notification feature.
 *   **Enhancement:** Implemented daily automatic fetching and pushing of Steam sale information.

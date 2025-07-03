@@ -53,9 +53,13 @@ class TwitterService {
 		};
 	}
 
-	createFallbackLink(originalUrl) {
-		const convertedLink = originalUrl.replace(/(twitter\.com|x\.com)/, 'fxtwitter.com');
-		return `\n${convertedLink}`;
+	createFallbackLink(originalUrl, reason = '') {
+		const useFxTwitter = !reason.toLowerCase().includes('fxtwitter');
+		const domain = useFxTwitter ? 'fxtwitter.com' : 'vxtwitter.com';
+		const convertedLink = originalUrl.replace(/(twitter\.com|x\.com)/, domain);
+
+		const reasonText = reason ? ` (${reason})` : '';
+		return `\n${convertedLink}${reasonText}`;
 	}
 }
 

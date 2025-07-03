@@ -10,6 +10,8 @@ const { loadReactionRoles } = require('./utils/reactionRoleStorage');
 const { commands, ...commandHandlers } = require('./commands');
 const { loadSteamMonitoredChannels } = require('./utils/steamStorage');
 const SteamService = require('./services/steam/steamService');
+const { loadYouTubeMonitoredChannels, saveYouTubeMonitoredChannels } = require('./utils/youtubeStorage');
+const YouTubeService = require('./services/youtube/youtubeService');
 
 // 確保 Bot 有權限讀取訊息內容、訊息歷史、發送訊息、管理表情符號等
 const client = new Client({
@@ -31,6 +33,9 @@ const client = new Client({
 // Steam service instance
 const steamService = new SteamService();
 
+// YouTube service instance
+const youtubeService = new YouTubeService();
+
 client.on('ready', async () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 
@@ -47,6 +52,9 @@ client.on('ready', async () => {
 
 	// Start Steam deals monitoring
 	startSteamMonitoring();
+
+	// Start YouTube monitoring
+	startYouTubeMonitoring();
 });
 
 // Steam monitoring function
@@ -107,6 +115,58 @@ function startSteamMonitoring() {
 	}, initialDelay);
 }
 
+// YouTube monitoring function
+async function checkYouTubeDeals() {
+	try {
+		let monitoredChannels = loadYouTubeMonitoredChannels();
+		if (monitoredChannels.length === 0) {
+			return;
+		}
+
+		for (const entry of monitoredChannels) {
+			const { channelId, youtubeChannelId, lastVideoId, lastLiveStreamId } = entry;
+			const channel = await client.channels.fetch(channelId).catch(console.error);
+
+			if (!channel) {
+				console.warn(`YouTube monitoring: Channel ${channelId} not found, removing from list.`);
+				monitoredChannels = monitoredChannels.filter(c => c.channelId !== channelId);
+				saveYouTubeMonitoredChannels(monitoredChannels);
+				continue;
+			}
+
+			const latestVideo = await youtubeService.fetchLatestVideo(youtubeChannelId);
+
+			if (latestVideo) {
+				if (latestVideo.id !== lastVideoId) {
+					const isLive = youtubeService.isLiveStream(latestVideo);
+					if (!isLive || (isLive && latestVideo.id !== lastLiveStreamId)) {
+						await channel.send(`新的${isLive ? '直播' : '影片'}上傳囉！ ${latestVideo.author}: ${latestVideo.link}`).catch(console.error);
+						console.log(`Sent new YouTube ${isLive ? 'live stream' : 'video'} for ${youtubeChannelId} to ${channel.name}`);
+
+						entry.lastVideoId = latestVideo.id;
+						if (isLive) {
+							entry.lastLiveStreamId = latestVideo.id;
+						}
+						saveYouTubeMonitoredChannels(monitoredChannels);
+					}
+				}
+			}
+		}
+	}
+	catch (error) {
+		console.error('Error checking YouTube deals:', error);
+	}
+}
+
+function startYouTubeMonitoring() {
+	const YOUTUBE_CHECK_INTERVAL = 5 * 60 * 1000;
+	console.log(`Starting YouTube monitoring. Checking every ${YOUTUBE_CHECK_INTERVAL / (60 * 1000)} minutes.`);
+
+	checkYouTubeDeals();
+
+	setInterval(checkYouTubeDeals, YOUTUBE_CHECK_INTERVAL);
+}
+
 client.on('interactionCreate', async interaction => {
 	if (interaction.isChatInputCommand()) {
 		if (interaction.commandName === 'setimage') {
@@ -119,6 +179,10 @@ client.on('interactionCreate', async interaction => {
 
 		if (interaction.commandName === 'steam') {
 			await commandHandlers.handleSteamCommand(interaction);
+		}
+
+		if (interaction.commandName === 'youtube') {
+			await commandHandlers.handleYouTubeCommand(interaction);
 		}
 	}
 	else if (interaction.isContextMenuCommand()) {
