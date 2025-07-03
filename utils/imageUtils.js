@@ -37,7 +37,7 @@ async function stitchImages(imageUrls) {
 		for (let i = 0; i < imageBuffers.length; i++) {
 			compositeOperations.push({
 				input: imageBuffers[i],
-				top: Math.floor((maxHeight - metadatas[i].height) / 2), // Center image vertically
+				top: Math.floor((maxHeight - metadatas[i].height) / 2),
 				left: leftOffset,
 			});
 			leftOffset += metadatas[i].width;
@@ -51,4 +51,4 @@ async function stitchImages(imageUrls) {
 	}
 }
 
-module.exports = { stitchImages }; 
+module.exports = { stitchImages };

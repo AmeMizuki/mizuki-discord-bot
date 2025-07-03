@@ -39,7 +39,8 @@ function convertVxTwitterMedia(mediaExtended) {
 				width: item.width || null,
 				height: item.height || null,
 			});
-		} else if (item.type === 'video' || item.type === 'gif') {
+		}
+		else if (item.type === 'video' || item.type === 'gif') {
 			videos.push({
 				url: item.url,
 				thumbnail_url: item.thumbnail_url || null,
@@ -70,16 +71,26 @@ async function fetchTweetData(tweetId) {
 		if (fxResponse.ok) {
 			const fxData = await fxResponse.json();
 			if (fxData.code === 200) {
-				console.log(`Successfully fetched tweet data from Fxtwitter API for tweet ID: ${tweetId}`);
-				return fxData.tweet;
+				const tweet = fxData.tweet;
+				if (
+					tweet.media &&
+					tweet.media.videos &&
+					tweet.media.videos.length > 0 &&
+					!tweet.media.videos[0].url
+				) {
+					console.warn(`Fxtwitter API failed to provide video URL for tweet ID: ${tweetId}. Trying vxtwitter.`);
+					throw new Error('Fxtwitter video link is missing');
+				}
+				return { data: tweet, source: 'fxtwitter' };
 			}
 			console.warn(`Fxtwitter API returned error code ${fxData.code}: ${fxData.message} for tweet ID: ${tweetId}`);
-		} else {
+		}
+		else {
 			console.warn(`Fxtwitter API HTTP error! status: ${fxResponse.status} for tweet ID: ${tweetId}`);
 		}
 	}
 	catch (error) {
-		console.warn('Fxtwitter API failed, trying vxtwitter as backup:', error.message);
+		console.warn(`Fxtwitter API failed, trying vxtwitter as backup: ${error.message}`);
 	}
 
 	try {
@@ -88,25 +99,25 @@ async function fetchTweetData(tweetId) {
 
 		if (!vxResponse.ok) {
 			console.error(`Vxtwitter API HTTP error! status: ${vxResponse.status} for tweet ID: ${tweetId}`);
-			return null;
+			return { data: null, source: 'vxtwitter' };
 		}
 
 		const contentType = vxResponse.headers.get('content-type');
 		if (!contentType || !contentType.includes('application/json')) {
 			console.error(`Vxtwitter API returned non-JSON response for tweet ID: ${tweetId}`);
-			return null;
+			return { data: null, source: 'vxtwitter' };
 		}
 
 		const vxData = await vxResponse.json();
 
 		if (vxData.error || !vxData.user_screen_name) {
 			console.error(`Vxtwitter API returned invalid data for tweet ID: ${tweetId}`);
-			return null;
+			return { data: null, source: 'vxtwitter' };
 		}
 
 		const convertedData = convertVxTwitterData(vxData);
-		console.log(`Successfully fetched tweet data from Vxtwitter API (backup) for tweet ID: ${tweetId}`);
-		return convertedData;
+		// console.log(`Successfully fetched tweet data from Vxtwitter API (backup) for tweet ID: ${tweetId}`);
+		return { data: convertedData, source: 'vxtwitter' };
 	}
 	catch (error) {
 		console.error('Error fetching tweet data from both Fxtwitter and Vxtwitter APIs:', error.message);

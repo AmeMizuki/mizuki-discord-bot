@@ -175,7 +175,12 @@ When adding new features, please follow modular principles:
 
 ## Changelog
 
-### Version 1.5.1 (2025-01-03)
+### Version 1.5.2 (2025-07-03)
+
+*   **Fix:** Improved Twitter/X video link handling by adding a fallback to `vxtwitter.com` when `fxtwitter.com` fails to provide a valid video URL.
+*   **Optimization:** Reduced the volume of console logs to prevent potential server performance issues, retaining only essential warnings and errors.
+
+### Version 1.5.1 (2025-07-03)
 
 *   **Enhancement:** Implemented automatic fallback mechanism for Twitter/X URL processing.
 *   **Reliability:** Added vxtwitter API as backup when fxtwitter API fails or is unavailable.

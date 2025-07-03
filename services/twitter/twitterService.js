@@ -19,11 +19,20 @@ class TwitterService {
 			};
 		}
 
-		const tweetData = await fetchTweetData(tweetId);
+		const tweetResult = await fetchTweetData(tweetId);
+		if (!tweetResult) {
+			return {
+				type: 'fallback',
+				content: this.createFallbackLink(url, 'Failed to get detailed information', 'fxtwitter'),
+			};
+		}
+
+		const { data: tweetData, source } = tweetResult;
+
 		if (!tweetData) {
 			return {
 				type: 'fallback',
-				content: this.createFallbackLink(url, 'Failed to get detailed information'),
+				content: this.createFallbackLink(url, 'Failed to get detailed information', source),
 			};
 		}
 
@@ -31,7 +40,7 @@ class TwitterService {
 		if (tweetData.media && tweetData.media.videos && tweetData.media.videos.length > 0) {
 			return {
 				type: 'fallback',
-				content: this.createFallbackLink(url),
+				content: this.createFallbackLink(url, '', source),
 			};
 		}
 
@@ -53,9 +62,8 @@ class TwitterService {
 		};
 	}
 
-	createFallbackLink(originalUrl, reason = '') {
-		const useFxTwitter = !reason.toLowerCase().includes('fxtwitter');
-		const domain = useFxTwitter ? 'fxtwitter.com' : 'vxtwitter.com';
+	createFallbackLink(originalUrl, reason = '', source = 'fxtwitter') {
+		const domain = source === 'vxtwitter' ? 'vxtwitter.com' : 'fxtwitter.com';
 		const convertedLink = originalUrl.replace(/(twitter\.com|x\.com)/, domain);
 
 		const reasonText = reason ? ` (${reason})` : '';

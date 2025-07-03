@@ -5,7 +5,7 @@
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
     "exif-parser": "^0.1.12",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.6.7",
     "png-chunk-text": "^1.0.0",
     "png-chunks-extract": "^1.0.0",
     "rss-parser": "^3.13.0"
