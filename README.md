@@ -119,7 +119,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
 - `/youtube` - YouTube Channel Tracking (Admin only).
   - `add [channel_id]` - Start tracking a YouTube channel for new video and livestream notifications. Requires the YouTube Channel ID (e.g., `UC...`).
   - `remove [channel_id]` - Stop tracking a YouTube channel. Requires the YouTube Channel ID.
-  - 📖 **[Detailed YouTube Channel Monitoring Guide](youtube-channel-en.md)** - Complete guide on how to get Channel ID and use monitoring features.
+  - 📖 **[Detailed YouTube Channel Monitoring Guide](youtube-channel.md)** - Complete guide on how to get Channel ID and use monitoring features.
 
 ### Automatic Features
 
