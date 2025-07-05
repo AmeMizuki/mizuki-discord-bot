@@ -12,7 +12,7 @@ const youtubeCommands = [
 		.addSubcommand(subcommand =>
 			subcommand
 				.setName('add')
-				.setDescription('追蹤一個 YouTube 頻道的新影片和直播通知')
+				.setDescription('追蹤一個 YouTube 頻道的新影片通知')
 				.addStringOption(option =>
 					option.setName('channel_id')
 						.setDescription('YouTube 頻道 ID')
@@ -45,6 +45,12 @@ async function handleYouTubeCommand(interaction) {
 			break;
 		}
 
+		const guildChannels = monitoredChannels.filter(entry => entry.guildId === guildId);
+		if (guildChannels.length >= 5) {
+			responseMessage = '⚠️ 每個伺服器最多只能追蹤 5 個 YouTube 頻道。';
+			break;
+		}
+
 		// Check if already tracking in this guild/channel
 		const existingEntry = monitoredChannels.find(entry =>
 			entry.guildId === guildId &&
@@ -61,7 +67,6 @@ async function handleYouTubeCommand(interaction) {
 				channelId,
 				youtubeChannelId,
 				lastVideoId: null,
-				lastLiveStreamId: null,
 			});
 			saveYouTubeMonitoredChannels(monitoredChannels);
 			responseMessage = `✅ 已開始追蹤 YouTube 頻道 ID：${youtubeChannelId} 於 ${interaction.channel.name}.`;

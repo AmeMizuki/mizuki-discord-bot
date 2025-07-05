@@ -116,7 +116,7 @@ function startSteamMonitoring() {
 }
 
 // YouTube monitoring function
-async function checkYouTubeDeals() {
+async function checkYouTubeVideos() {
 	try {
 		let monitoredChannels = loadYouTubeMonitoredChannels();
 		if (monitoredChannels.length === 0) {
@@ -124,7 +124,7 @@ async function checkYouTubeDeals() {
 		}
 
 		for (const entry of monitoredChannels) {
-			const { channelId, youtubeChannelId, lastVideoId, lastLiveStreamId } = entry;
+			const { channelId, youtubeChannelId, lastVideoId } = entry;
 			const channel = await client.channels.fetch(channelId).catch(console.error);
 
 			if (!channel) {
@@ -138,33 +138,27 @@ async function checkYouTubeDeals() {
 
 			if (latestVideo) {
 				if (latestVideo.id !== lastVideoId) {
-					const isLive = youtubeService.isLiveStream(latestVideo);
-					if (!isLive || (isLive && latestVideo.id !== lastLiveStreamId)) {
-						await channel.send(`新的${isLive ? '直播' : '影片'}上傳囉！ ${latestVideo.author}: ${latestVideo.link}`).catch(console.error);
-						console.log(`Sent new YouTube ${isLive ? 'live stream' : 'video'} for ${youtubeChannelId} to ${channel.name}`);
+					await channel.send(`新影片上傳囉！ ${latestVideo.author}: ${latestVideo.link}`).catch(console.error);
+					console.log(`Sent new YouTube video for ${youtubeChannelId} to ${channel.name}`);
 
-						entry.lastVideoId = latestVideo.id;
-						if (isLive) {
-							entry.lastLiveStreamId = latestVideo.id;
-						}
-						saveYouTubeMonitoredChannels(monitoredChannels);
-					}
+					entry.lastVideoId = latestVideo.id;
+					saveYouTubeMonitoredChannels(monitoredChannels);
 				}
 			}
 		}
 	}
 	catch (error) {
-		console.error('Error checking YouTube deals:', error);
+		console.error('Error checking YouTube videos:', error);
 	}
 }
 
 function startYouTubeMonitoring() {
-	const YOUTUBE_CHECK_INTERVAL = 5 * 60 * 1000;
-	console.log(`Starting YouTube monitoring. Checking every ${YOUTUBE_CHECK_INTERVAL / (60 * 1000)} minutes.`);
+	const YOUTUBE_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
+	console.log(`Starting YouTube monitoring. Checking every ${YOUTUBE_CHECK_INTERVAL / (60 * 60 * 1000)} hours.`);
 
-	checkYouTubeDeals();
+	checkYouTubeVideos();
 
-	setInterval(checkYouTubeDeals, YOUTUBE_CHECK_INTERVAL);
+	setInterval(checkYouTubeVideos, YOUTUBE_CHECK_INTERVAL);
 }
 
 client.on('interactionCreate', async interaction => {

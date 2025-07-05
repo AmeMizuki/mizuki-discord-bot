@@ -22,7 +22,7 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - 🔗 **Multi-Platform URL Conversion**: Automatically converts links from various platforms to enhanced embeds.
 - 🖼️ **Multi-Image Support**: Displays multiple images from supported platforms in a single message using multiple embeds.
 - 💰 **Steam Sale Notifications**: Automatically fetch and display Steam game sale information and push notifications to a designated channel.
-- 🎬 **YouTube Channel Tracking**: Monitors specified YouTube channels for new video uploads and livestreams, sending plain link notifications to a designated Discord channel.
+- 🎬 **YouTube Channel Tracking**: Monitors specified YouTube channels for new video uploads, sending plain link notifications to a designated Discord channel.
 - 🎀 Cute response tone.
 
 ## Supported Features
@@ -117,7 +117,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
   - `action: Clear All Channels` - Clear the monitored list (bot will not monitor any channels automatically).
   - `action: View Current Channels` - View currently monitored channels.
 - `/youtube` - YouTube Channel Tracking (Admin only).
-  - `add [channel_id]` - Start tracking a YouTube channel for new video and livestream notifications. Requires the YouTube Channel ID (e.g., `UC...`).
+  - `add [channel_id]` - Start tracking a YouTube channel for new video notifications. Requires the YouTube Channel ID (e.g., `UC...`).
   - `remove [channel_id]` - Stop tracking a YouTube channel. Requires the YouTube Channel ID.
   - 📖 **[Detailed YouTube Channel Monitoring Guide](youtube-channel.md)** - Complete guide on how to get Channel ID and use monitoring features.
 
@@ -140,7 +140,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
 
 3. **Steam Sale Notifications**: Automatically fetch the latest Steam game sale information daily and send notifications to a designated channel. Users can also manually query for sale information using a slash command.
 
-4. **YouTube Notifications**: When a new video or livestream is detected on a tracked YouTube channel, a plain link notification will be sent to the designated Discord channel in the format: "New {video/livestream} upload! {Channel Name} : {Link}".
+4. **YouTube Notifications**: When a new video is detected on a tracked YouTube channel, a plain link notification will be sent to the designated Discord channel in the format: "New video upload! {Channel Name} : {Link}".
 
 ## Supported Image Formats
 
@@ -174,6 +174,11 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 1.5.3 (2025-07-05)
+
+*   **Enhancement:** Removed YouTube livestream tracking to focus solely on new video notifications. Updated relevant commands and descriptions.
+*   **Enhancement:** Simplified the Steam deals embed by removing the thumbnail image to provide a cleaner look.
 
 ### Version 1.5.2 (2025-07-03)
 

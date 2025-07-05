@@ -88,7 +88,6 @@ class SteamService {
 			.setTitle(deal.name)
 			.setURL(`https://store.steampowered.com/app/${deal.id}`)
 			.setColor('#1B2838')
-			.setThumbnail(deal.small_capsule_image)
 			.setImage(deal.large_capsule_image);
 
 		if (deal.discounted) {

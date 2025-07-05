@@ -17,10 +17,9 @@ This guide provides detailed instructions on how to use the YouTube channel moni
 The YouTube channel monitoring feature can:
 
 - ✅ Monitor new video uploads from specified YouTube channels
-- ✅ Monitor livestream starts from specified YouTube channels
 - ✅ Automatically send notifications to designated Discord channels
 - ✅ Support monitoring multiple channels simultaneously
-- ✅ Check for updates every 5 minutes
+- ✅ Check for updates daily
 - ✅ Persistent storage of settings (maintained after restart)
 
 ## 🔍 How to Get YouTube Channel ID
@@ -137,38 +136,26 @@ Response: `⚠️ Invalid YouTube channel ID. Please check if the ID format is c
 ```
 Response: `⚠️ This channel is already tracking YouTube channel ID: UC-lHJZR3Gqxm24_Vd_AJ5Yw.`
 
-### Example 3: Notification Examples
+### Example 3: Notification Example
 
 **When PewDiePie uploads a new video**:
 ```
-新的影片上傳囉！ PewDiePie: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-```
-
-**When a channel starts a livestream**:
-```
-新的直播上傳囉！ Channel Name: https://www.youtube.com/watch?v=abc123def456
+New video upload! PewDiePie: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
 ## ⚙️ Monitoring Mechanism
 
 ### Check Frequency
-- **Interval**: Check every 5 minutes
+- **Interval**: Checks once daily
 - **Method**: Using YouTube RSS Feed
 - **RSS URL Format**: `https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}`
 
 ### Detection Logic
 
 1. **New Video Detection**:
-   - Compare latest video ID with last recorded ID
-   - If different, consider it a new video
-
-2. **Livestream Detection**:
-   - Check if video title contains livestream keywords: `live`, `直播`, `實況`
-   - Track latest video ID and latest livestream ID separately
-
-3. **Duplicate Notification Protection**:
-   - Record last video ID and livestream ID
-   - Avoid sending duplicate notifications for the same content
+   - The bot fetches the latest video from the channel's RSS feed.
+   - It compares the latest video's ID with the last recorded ID for that channel.
+   - If the ID is new, a notification is sent, and the new ID is stored to prevent duplicate notifications.
 
 ### Data Storage
 
@@ -180,8 +167,7 @@ Monitoring settings are stored in `youtube_channels.json` file:
     "guildId": "Server ID",
     "channelId": "Discord Channel ID", 
     "youtubeChannelId": "YouTube Channel ID",
-    "lastVideoId": "Last Video ID",
-    "lastLiveStreamId": "Last Livestream ID"
+    "lastVideoId": "Last Video ID"
   }
 ]
 ```
@@ -190,24 +176,15 @@ Monitoring settings are stored in `youtube_channels.json` file:
 
 ### New Video Notification
 ```
-新的影片上傳囉！ Channel Name: https://www.youtube.com/watch?v=VIDEO_ID
+New video upload! Channel Name: https://www.youtube.com/watch?v=VIDEO_ID
 ```
-
-### New Livestream Notification
-```
-新的直播上傳囉！ Channel Name: https://www.youtube.com/watch?v=VIDEO_ID
-```
-
-**Note**: The notifications are currently in Traditional Chinese. The format shows:
-- `新的影片上傳囉！` = "New video upload!"
-- `新的直播上傳囉！` = "New livestream upload!"
+*The bot may respond in Traditional Chinese, e.g., `新的影片上傳囉！` which means "New video upload!".*
 
 ### Notification Features
 
 - ✅ **Plain Link Format**: Easy to click and watch
-- ✅ **Real-time Notifications**: Detected within 5 minutes of update
+- ✅ **Daily Check**: Checks for new content once a day
 - ✅ **Channel Name**: Shows the actual YouTube channel name
-- ✅ **Type Distinction**: Clearly indicates whether it's a video or livestream
 
 ## ❓ Frequently Asked Questions
 
@@ -226,62 +203,45 @@ Monitoring settings are stored in `youtube_channels.json` file:
 ### Q2: Why am I not receiving notifications?
 
 **Possible Reasons**:
-1. **No new content**: Check if the YouTube channel has new uploads
-2. **RSS Feed delay**: YouTube RSS may have 5-15 minute delays
-3. **Insufficient bot permissions**: Ensure bot has message sending permissions
-4. **Incorrect Channel ID**: Re-verify the Channel ID is correct
+1. **No new content**: The channel may not have uploaded a new video since the last daily check.
+2. **RSS Feed delay**: YouTube's RSS feed can sometimes be delayed.
+3. **Daily Check Schedule**: The bot checks once per day. You may need to wait up to 24 hours for a notification.
+4. **Insufficient bot permissions**: Ensure the bot has message sending permissions in the target channel.
+5. **Incorrect Channel ID**: Re-verify the Channel ID is correct.
 
 ### Q3: How many channels can be monitored?
 
-**A**: Theoretically no limit, but recommendations:
-- Monitor no more than 10 YouTube channels per Discord channel
-- Avoid monitoring channels with extremely high update frequency
-- Be mindful of Discord's message rate limits
+**A**: There is no hard limit, but it's good practice to keep the number reasonable to ensure smooth operation. Monitoring is not resource-intensive as it only checks once per day.
 
 ### Q4: How to view currently monitored channels?
 
-**A**: Currently no list command available, but you can:
-1. Check the `youtube_channels.json` file
-2. Try adding the same channel again, it will show an "already exists" message
+**A**: Currently no list command is available, but you can:
+1. Check the `youtube_channels.json` file on the server where the bot is hosted.
+2. Try adding the same channel again; if it's already being tracked, the bot will inform you.
 
 ## 🔧 Troubleshooting
 
 ### Issue: Bot not responding to commands
 
 **Solutions**:
-1. Confirm bot is online
-2. Confirm you have administrator permissions
-3. Confirm command format is correct
-4. Re-invite bot with appropriate permissions
+1. Confirm bot is online.
+2. Confirm you have administrator permissions on the server.
+3. Confirm the command format is correct.
+4. Re-invite the bot with the appropriate permissions if needed.
 
 ### Issue: Notification sending failed
 
 **Check Items**:
 1. **Bot Permissions**:
-   - View channel permissions
-   - Send messages permission
-   - Embed links permission
+   - View channel
+   - Send messages
+   - Embed links
 
 2. **Channel Status**:
-   - Whether channel was deleted
-   - Whether bot was kicked from server
+   - Check if the channel was deleted or if the bot was kicked from the server.
 
 3. **Log Check**:
-   ```
-   YouTube monitoring: Channel {CHANNEL_ID} not found, removing from list.
-   ```
-
-### Issue: Duplicate notifications
-
-**Possible Causes**:
-- Bot restart causing record loss
-- YouTube RSS Feed anomaly
-- Livestream status changes
-
-**Solutions**:
-- Restart bot
-- Remove and re-add monitoring
-- Check `youtube_channels.json` file integrity
+   - The bot will log an error if it cannot find a channel, e.g., `YouTube monitoring: Channel {CHANNEL_ID} not found, removing from list.`
 
 ## 📝 Technical Details
 
@@ -294,15 +254,14 @@ Monitoring settings are stored in `youtube_channels.json` file:
 
 ### API Limitations
 
-- **YouTube RSS Feed**: No API Key required, but has cache delays
-- **Update Frequency**: Recommended minimum 5-minute intervals
-- **Concurrent Requests**: Avoid requesting too many channels simultaneously
+- **YouTube RSS Feed**: No API Key is required, but it can have cache delays.
+- **Update Frequency**: The bot checks once daily to be respectful to the service and avoid rate limits.
 
 ### Performance Considerations
 
-- Each monitored channel sends one HTTP request every 5 minutes
-- RSS parsing uses `rss-parser` package
-- Data storage uses JSON files (suitable for small-scale use)
+- Each monitored channel sends one HTTP request per day, which has minimal performance impact.
+- RSS parsing uses the `rss-parser` package.
+- Data storage uses JSON files, which is suitable for small-to-medium scale use.
 
 ---
 
@@ -311,10 +270,10 @@ Monitoring settings are stored in `youtube_channels.json` file:
 If you encounter issues, please:
 
 1. **Check the troubleshooting section in this guide**
-2. **Confirm Channel ID format is correct**
+2. **Confirm the Channel ID format is correct**
 3. **Check bot permission settings**
-4. **Join support server**: [Mizuki Bot Discord](https://discord.gg/avMvrhdX3r)
+4. **Join the support server**: [Mizuki Bot Discord](https://discord.gg/avMvrhdX3r)
 
 ---
 
-*Last updated: 2025-07-01*
+*Last updated: 2025-07-05*

@@ -18,11 +18,6 @@ class YouTubeService {
 			return null;
 		}
 	}
-
-	isLiveStream(item) {
-		const liveKeywords = ['live', '直播', '實況'];
-		return liveKeywords.some(keyword => item.title.toLowerCase().includes(keyword));
-	}
 }
 
 module.exports = YouTubeService;

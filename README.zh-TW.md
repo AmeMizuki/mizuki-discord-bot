@@ -22,7 +22,7 @@
 - 🔗 **多平台網址轉換**：自動轉換各種平台連結為增強型嵌入訊息。
 - 🖼️ **多圖片支援**：在單一訊息中使用多個嵌入區塊顯示支援平台的多張圖片。
 - 💰 **Steam 特賣通知**：自動抓取並顯示 Steam 遊戲特賣資訊，並推播通知到指定頻道。
-- 🎬 **YouTube 頻道追蹤**：監控指定的 YouTube 頻道，以便在新影片上傳或直播開始時，發送純連結通知到指定的 Discord 頻道。
+- 🎬 **YouTube 頻道追蹤**：監控指定的 YouTube 頻道，以便在新影片上傳時，發送純連結通知到指定的 Discord 頻道。
 - 🎀 可愛的回應語氣
 
 ## 支援平台
@@ -117,7 +117,7 @@ node index.js
   - `action: 清空所有頻道` - 清空監聽清單（不會監聽任何頻道）
   - `action: 查看當前頻道` - 查看目前監聽的頻道
 - `/youtube` - YouTube 頻道追蹤 (僅管理員可用)
-  - `add [channel_id]` - 開始追蹤一個 YouTube 頻道的新影片和直播通知。需要 YouTube 頻道 ID（例如：`UC...`）。
+  - `add [channel_id]` - 開始追蹤一個 YouTube 頻道的新影片通知。需要 YouTube 頻道 ID（例如：`UC...`）。
   - `remove [channel_id]` - 停止追蹤一個 YouTube 頻道。需要 YouTube 頻道 ID。
   - 📖 **[詳細 YouTube 頻道監控使用指南](youtube-channel.zh-tw.md)** - 完整說明如何獲取頻道 ID 和使用監控功能。
 
@@ -125,7 +125,7 @@ node index.js
 
 1. **圖片 Metadata 提取**：當有人在監聽頻道上傳圖片時，曉山瑞希會自動添加 🔍 和 ❤️ 表情符號。
    - 點擊 🔍 表情符號後，會收到包含圖片 metadata 的私訊。
-   - 點擊 ❤️ 表情符號或使用右鍵應用程式集指令「Favorite Image」後，會收到包含美觀圖片 Embed 及原始訊息連結的私訊。
+   - 點擊 ❤️ 表情符號或使���右鍵應用程式集指令「Favorite Image」後，會收到包含美觀圖片 Embed 及原始訊息連結的私訊。
 
 2. **多平台網址轉換**：當有人發送支援平台的連結時，機器人會：
    - 自動偵測來自 Twitter/X、Pixiv、PTT、Bilibili 和 PChome 的網址
@@ -140,7 +140,7 @@ node index.js
 
 3. **Steam 特賣通知**：每日自動抓取最新的 Steam 遊戲特賣資訊，並發送通知到指定頻道。使用者也可以透過斜線指令手動查詢特賣資訊。
 
-4. **YouTube 通知**：當在追蹤的 YouTube 頻道偵測到新影片或直播時，會發送純連結通知到指定的 Discord 頻道，格式為：「新的{直播/影片}上傳囉！ {頻道名稱} : {連結}」。
+4. **YouTube 通知**：當在追蹤的 YouTube 頻道偵測到新影片時，會發送純連結通知到指定的 Discord 頻道，格式為：「新影片上傳囉！ {頻道名稱} : {連結}」。
 
 ## 支援的圖片格式
 
@@ -150,7 +150,7 @@ node index.js
 
 ### 模組化結構
 
-- `config.js` - 集中管理配置和環境變數
+- `config.js` - 集中管理配置和環境��數
 - `utils/metadata.js` - 處理圖片 metadata 解析
 - `utils/embedBuilder.js` - 建構 Discord embed 訊息
 - `utils/channelStorage.js` - 處理監聽頻道的持久化存儲
@@ -175,6 +175,11 @@ node index.js
 
 ## 更新日誌 (Changelog)
 
+### 版本 1.5.3 (2025-07-05)
+
+*   **功能強化：** 移除了 YouTube 直播追蹤功能，專注於新影片通知。更新了相關指令和說明。
+*   **功能強化：** 簡化了 Steam 特賣的嵌入訊息，移除了縮圖以提供更簡潔的視覺效果。
+
 ### 版本 1.5.2 (2025-07-03)
 
 *   **問題修復：** 改善了 Twitter/X 影片連結的處理，當 `fxtwitter.com` 無法提供有效的影片 URL 時，會自動備援至 `vxtwitter.com`。
@@ -192,7 +197,7 @@ node index.js
 ### 版本 1.5.0 (2025-06-25)
 
 *   **新增功能：** 新增 YouTube 頻道追蹤功能。
-*   **功能強化：** YouTube 新影片和直播通知現在以純連結形式發送，格式為「新的{直播/影片}上傳囉！ {頻道名稱} : {連結}」。
+*   **功能強化：** YouTube 新影片和直播通知現在以純連結形式發送，格式為：「新的{直播/影片}上傳囉！ {頻道名稱} : {連結}」。
 *   **指令變更：**
     *   `/youtube add` 現在需要 YouTube 頻道 ID。
     *   `/youtube remove` 現在需要 YouTube 頻道 ID。
