@@ -19,6 +19,25 @@ class PttService {
 		return matches || [];
 	}
 
+	extractFirstImage(text) {
+		const pattern = /https:\/\/.*\.(jpg|jpeg|png|gif|webp)/;
+		const result = text.match(pattern);
+		if (result && result.length > 0) {
+			return result[0];
+		}
+		return null;
+	}
+
+	cleanContent(text) {
+		if (!text) return '';
+
+		return text
+			.replace(/^※.*$/gm, '')
+			.replace(/^\s*[\r\n]/gm, '')
+			.trim()
+			.substring(0, 160);
+	}
+
 	extractImages(content) {
 		const imageUrls = [];
 
@@ -51,151 +70,74 @@ class PttService {
 		try {
 			const response = await axios.get(url, {
 				headers: {
-					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-					'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-					'Accept-Language': 'zh-TW,zh;q=0.9,en;q=0.8',
-					'Accept-Encoding': 'gzip, deflate, br',
+					'Host': 'www.ptt.cc',
+					'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0',
+					'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+					'Accept-Language': 'zh-TW,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+					'Accept-Encoding': 'gzip, deflate, br, zstd',
+					'Referer': 'https://www.ptt.cc/bbs/Gossiping/search',
 					'Connection': 'keep-alive',
+					'Cookie': 'over18=1;',
 					'Upgrade-Insecure-Requests': '1',
+					'Sec-Fetch-Dest': 'document',
+					'Sec-Fetch-Mode': 'navigate',
+					'Sec-Fetch-Site': 'same-origin',
+					'Sec-Fetch-User': '?1',
+					'Priority': 'u=0, i',
 				},
 				timeout: 20000,
 				maxRedirects: 5,
+				maxContentLength: 2 * 1024 * 1024,
+   			maxBodyLength: 2 * 1024 * 1024,
 				validateStatus: (status) => status < 400,
 			});
 
 			const $ = cheerio.load(response.data);
 
-			// 優化的文章資訊提取邏輯
-			let title = '';
-			let author = '';
-			let publishDate = null;
+			// 提取基本資訊
+			const title = $('meta[property="og:title"]').attr('content') ||
+						  $('.article-meta-value').eq(2).text().trim() ||
+						  'PTT 文章';
 
-			// 嘗試多種方式提取標題
-			title = $('.article-meta-value').eq(2).text().trim() ||
-					$('.article-meta-tag:contains("標題")').next('.article-meta-value').text().trim() ||
-					$('meta[property="og:title"]').attr('content') ||
-					$('title').text().replace(' - 批踢踢實業坊', '').trim() ||
-					'PTT 文章';
+			const description = $('meta[property="og:description"]').attr('content') || '';
 
-			// 嘗試多種方式提取作者
-			author = $('.article-meta-value').eq(0).text().trim() ||
-					 $('.article-meta-tag:contains("作者")').next('.article-meta-value').text().trim() ||
-					 '未知作者';
+			// 提取文章內容
+			const mainContent = $('#main-content').text().substring(0, 1000) || '';
 
-			// 嘗試多種方式提取發布時間
-			const dateStr = $('.article-meta-value').eq(3).text().trim() ||
-							$('.article-meta-tag:contains("時間")').next('.article-meta-value').text().trim();
-
-			if (dateStr) {
-				try {
-					publishDate = new Date(dateStr);
-					// 檢查日期是否有效
-					if (isNaN(publishDate.getTime())) {
-						publishDate = null;
-					}
+			let finalDescription = '';
+			if (description.match(/1\.媒體來源:/)) {
+				// 新聞文章，使用清理後的內容
+				const cleanedContent = this.cleanContent(mainContent);
+				if (cleanedContent) {
+					finalDescription = cleanedContent;
 				}
-				catch (error) {
-					console.warn('Failed to parse date:', error);
-					publishDate = null;
+				else if (description) {
+					finalDescription = description;
 				}
 			}
-
-			// 優化的文章內容提取邏輯
-			let content = '';
-			const mainContent = $('#main-content');
-
-			if (mainContent.length > 0) {
-				// 創建內容副本以避免修改原始 DOM
-				const contentClone = mainContent.clone();
-
-				// 移除推文區域和其他不需要的元素
-				contentClone.find('.push').remove();
-				contentClone.find('.article-metaline').remove();
-				contentClone.find('.article-meta-tag').remove();
-				contentClone.find('.article-meta-value').remove();
-
-				// 獲取純文字內容
-				content = contentClone.text().trim();
-
-				// 更精確的內容清理
-				const lines = content.split('\n');
-				const cleanLines = lines.filter(line => {
-					const trimmed = line.trim();
-					return trimmed &&
-						   !trimmed.startsWith('※') &&
-						   !trimmed.startsWith('--') &&
-						   !trimmed.match(/^作者[\s:：]+/) &&
-						   !trimmed.match(/^標題[\s:：]+/) &&
-						   !trimmed.match(/^時間[\s:：]+/) &&
-						   !trimmed.match(/^看板[\s:：]+/) &&
-						   !trimmed.match(/^\s*$/) &&
-						   trimmed.length > 1;
-				});
-
-				content = cleanLines.join('\n').trim();
-
-				// 移除連續的空行
-				content = content.replace(/\n\s*\n\s*\n/g, '\n\n');
+			else if (description) {
+				finalDescription = description;
 			}
 
-			// 如果沒有提取到內容，嘗試從 meta 標籤獲取
-			if (!content) {
-				content = $('meta[property="og:description"]').attr('content') || '';
-			}
+			// 提取第一張圖片
+			const firstImage = this.extractFirstImage(mainContent);
 
-			// 限制內容長度
-			if (content.length > 1000) {
-				content = content.substring(0, 1000) + '...';
-			}
-
-			let imageUrls = [];
-
-			// 從文章內容中提取圖片
-			const fullContent = mainContent.html() || '';
-			if (fullContent) {
-				imageUrls = this.extractImages(fullContent);
-			}
-
-			// 如果沒有找到圖片，嘗試從整個頁面提取
-			if (imageUrls.length === 0) {
-				const pageContent = $('body').html() || '';
-				imageUrls = this.extractImages(pageContent);
-			}
-
-			// 過濾掉無效的圖片 URL
-			imageUrls = imageUrls.filter(imageUrl => {
-				try {
-					new URL(imageUrl);
-					return true;
-				}
-				catch {
-					return false;
-				}
-			});
-
-			// 創建主要 Embed
 			const embed = new EmbedBuilder()
 				.setColor(0x61FFCA)
 				.setTitle(title)
 				.setURL(url)
-				.setAuthor({
-					name: `${author}`,
-				})
 				.setFooter({
 					text: 'PTT 批踢踢實業坊',
 				});
 
-			if (publishDate && !isNaN(publishDate.getTime())) {
-				embed.setTimestamp(publishDate);
-			}
-
-			if (content) {
-				embed.setDescription(content);
+			// 設置描述
+			if (finalDescription) {
+				embed.setDescription(finalDescription);
 			}
 
 			// 設置第一張圖片
-			if (imageUrls.length > 0) {
-				embed.setImage(imageUrls[0]);
+			if (firstImage) {
+				embed.setImage(firstImage);
 			}
 
 			const result = {
@@ -213,21 +155,10 @@ class PttService {
 
 		}
 		catch (error) {
-			console.error('Error processing PTT URL:', error);
-
-			let errorMessage = '無法預覽 PTT 文章';
-
-			// 更詳細的錯誤處理
-			if (error.code === 'ECONNABORTED') {
-				errorMessage = 'PTT 連接超時，請稍後再試';
-			}
-			else if (error.response?.status === 404) {
-				errorMessage = 'PTT 文章不存在或已被刪除';
-			}
-
+			console.error('PTT service error:', error.message);
 			return {
-				type: 'text',
-				content: `❌ ${errorMessage}`,
+				type: 'fallback',
+				content: url,
 			};
 		}
 	}
