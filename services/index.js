@@ -6,6 +6,7 @@ const PchomeService = require('./pchome/pchomeService');
 const RedditService = require('./reddit/redditService');
 const CivitaiService = require('./civitai/civitaiService');
 const EhentaiService = require('./ehentai/ehentaiService');
+const MisskeyService = require('./misskey/misskeyService');
 const { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { URL } = require('url');
 
@@ -20,6 +21,7 @@ class UrlConversionService {
 			new RedditService(),
 			new CivitaiService(),
 			new EhentaiService(),
+			new MisskeyService(),
 		];
 		this.deniedDomains = [
 			'exampledenied.com',
@@ -39,9 +41,21 @@ class UrlConversionService {
 		}
 	}
 
-	async processMessage(content, message) {
-		const results = [];
+	hasUrlsToProcess(content) {
+		for (const service of this.services) {
+			const urls = service.detectUrls(content);
+			if (urls.length > 0) {
+				const allowedUrls = urls.filter(url => !this.isUrlDenied(url));
+				if (allowedUrls.length > 0) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
+	async processMessage(content) {
+		const results = [];
 		for (const service of this.services) {
 			const urls = service.detectUrls(content);
 			if (urls.length > 0) {
@@ -50,14 +64,6 @@ class UrlConversionService {
 
 				if (allowedUrls.length === 0) {
 					continue;
-				}
-
-				// Suppress Discord's native embeds only if there are allowed URLs to process
-				try {
-					await message.suppressEmbeds(true);
-				}
-				catch (error) {
-					console.error('Failed to suppress embeds:', error);
 				}
 
 				// Process each URL
@@ -306,4 +312,5 @@ module.exports = {
 	RedditService,
 	CivitaiService,
 	EhentaiService,
+	MisskeyService,
 };

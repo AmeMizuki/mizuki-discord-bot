@@ -137,6 +137,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
    - **Bilibili**: Provide video/content previews
    - **PChome**: Show product information including images, names, prices, and feature highlights
    - Provide fallback links if processing fails
+   - **Misskey**: Show note content with appropriate formatting, including images and videos
 
 3. **Steam Sale Notifications**: Automatically fetch the latest Steam game sale information daily and send notifications to a designated channel. Users can also manually query for sale information using a slash command.
 
@@ -174,6 +175,12 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 1.5.4 (2025-09-16)
+
+*   **New Feature:** Added Misskey URL conversion support.
+*   **Enhancement:** Improved error handling for URL processing, including better error messages and fallback mechanisms.
+*   **Fix:** PTT image extraction now correctly handles images with query parameters.
 
 ### Version 1.5.3 (2025-07-05)
 

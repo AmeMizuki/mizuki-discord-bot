@@ -301,7 +301,18 @@ client.on('messageCreate', async message => {
 
 	// Handle URL conversions (Twitter, etc.)
 	const urlConversionService = new UrlConversionService();
-	const conversionResults = await urlConversionService.processMessage(message.content, message);
+	const hasUrlsToProcess = urlConversionService.hasUrlsToProcess(message.content);
+	if (hasUrlsToProcess) {
+		try {
+			await message.suppressEmbeds(true);
+			console.log(`Fast suppressed embeds for message: ${message.id}`);
+		}
+		catch (error) {
+			console.error('Failed to fast suppress embeds:', error);
+		}
+	}
+
+	const conversionResults = await urlConversionService.processMessage(message.content);
 
 	if (conversionResults.length > 0) {
 		await urlConversionService.sendResults(conversionResults, message.channel, message);
