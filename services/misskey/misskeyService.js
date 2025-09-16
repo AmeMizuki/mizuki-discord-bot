@@ -104,7 +104,7 @@ class MisskeyService {
 		return filteredText;
 	}
 
-	createEmbed(noteData, originalUrl) {
+	createEmbed(noteData, originalUrl, imageUrl = null) {
 		const user = noteData.user;
 		const embed = new EmbedBuilder()
 			.setColor('#86b300')
@@ -127,11 +127,8 @@ class MisskeyService {
 			}
 		}
 
-		if (noteData.files && noteData.files.length > 0) {
-			const firstImage = noteData.files.find(file => file.type.startsWith('image/'));
-			if (firstImage) {
-				embed.setImage(firstImage.url);
-			}
+		if (imageUrl) {
+			embed.setImage(imageUrl);
 		}
 
 		return embed;
@@ -145,25 +142,23 @@ class MisskeyService {
 			}
 
 			const noteData = await this.fetchNoteData(noteId);
-			const embed = this.createEmbed(noteData, url);
+			const imageFiles = noteData.files ? noteData.files.filter(file => file.type.startsWith('image/')) : [];
+			const embeds = [];
 
-			const additionalEmbeds = [];
-			if (noteData.files && noteData.files.length > 1) {
-				for (let i = 1; i < Math.min(noteData.files.length, 4); i++) {
-					const file = noteData.files[i];
-					if (file.type.startsWith('image/')) {
-						const imageEmbed = new EmbedBuilder()
-							.setColor('#86b300')
-							.setImage(file.url);
-
-						additionalEmbeds.push(imageEmbed);
-					}
-				}
+			if (imageFiles.length === 0) {
+				const embed = this.createEmbed(noteData, url);
+				embeds.push(embed);
+			}
+			else {
+				imageFiles.forEach((file) => {
+					const embed = this.createEmbed(noteData, url, file.url);
+					embeds.push(embed);
+				});
 			}
 
 			return {
 				type: 'embeds',
-				content: [embed, ...additionalEmbeds],
+				content: embeds,
 			};
 		}
 		catch (error) {
