@@ -1,6 +1,6 @@
 const TwitterService = require('./twitter/twitterService');
 const PixivService = require('./pixiv/pixivService');
-const PttService = require('./ptt/pttService');
+// const PttService = require('./ptt/pttService');
 const BilibiliService = require('./bilibili/bilibiliService');
 const PchomeService = require('./pchome/pchomeService');
 const RedditService = require('./reddit/redditService');
@@ -15,7 +15,7 @@ class UrlConversionService {
 		this.services = [
 			new TwitterService(),
 			new PixivService(),
-			new PttService(),
+			// new PttService(),
 			new BilibiliService(),
 			new PchomeService(),
 			new RedditService(),
@@ -306,7 +306,7 @@ module.exports = {
 	UrlConversionService,
 	TwitterService,
 	PixivService,
-	PttService,
+	// PttService,
 	BilibiliService,
 	PchomeService,
 	RedditService,

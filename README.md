@@ -133,7 +133,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
    - Create enhanced embeds with platform-specific formatting
    - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fxtwitter links with automatic vxtwitter fallback
    - **Pixiv**: Show artwork previews with artist information
-   - **PTT**: Display post content with proper formatting
+   - ~~**PTT**: Display post content with proper formatting~~ (PTT is no longer supported due to certain server provider being blocked.)
    - **Bilibili**: Provide video/content previews
    - **PChome**: Show product information including images, names, prices, and feature highlights
    - Provide fallback links if processing fails
@@ -180,7 +180,7 @@ When adding new features, please follow modular principles:
 
 *   **New Feature:** Added Misskey URL conversion support.
 *   **Enhancement:** Improved error handling for URL processing, including better error messages and fallback mechanisms.
-*   **Fix:** PTT image extraction now correctly handles images with query parameters.
+*   **Removed:** No longer supports PTT because they blocked certain server provider I believe so.
 
 ### Version 1.5.3 (2025-07-05)
 
