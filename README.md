@@ -28,13 +28,14 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 ## Supported Features
 - [x] Twitter/X
 - [x] Pixiv
-- [x] PTT
 - [x] Bilibili
 - [x] PChome
 - [x] Civitai
 - [x] Reddit
 - [x] E-Hentai & ExHentai
+- [x] Misskey
 - [x] YouTube
+- [ ] ~~PTT~~ (removed - the server was blocked)
 
 ## File Structure
 
@@ -128,7 +129,7 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
    - Clicking the ❤️ emoji or using the right-click context menu command "Favorite Image" will send a private message with an aesthetically pleasing embed of the image and a link to the original message.
 
 2. **Multi-Platform URL Conversion**: When someone posts links from supported platforms, the bot will:
-   - Automatically detect URLs from Twitter/X, Pixiv, PTT, Bilibili, and PChome
+   - Automatically detect URLs from Twitter/X, Pixiv, Bilibili, PChome, Civitai, Reddit, E-Hentai/ExHentai, and Misskey
    - Suppress Discord's native embeds for better presentation
    - Create enhanced embeds with platform-specific formatting
    - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fxtwitter links with automatic vxtwitter fallback
@@ -175,6 +176,11 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 1.5.5 (2026-06-15)
+
+*   **Fix:** Link embeds (Twitter/X and other platforms) sometimes were not suppressed until Discord was refreshed. Discord attaches the link preview asynchronously, *after* the message is created, so the immediate suppression on message creation could race an embed that did not exist yet. A `messageUpdate` listener now catches the embed when it actually arrives and suppresses it, so the native preview is removed reliably without needing a refresh.
+*   **Fix:** Misskey notes containing multiple images are now grouped into a single embed instead of being split across separate ones.
 
 ### Version 1.5.4 (2025-09-16)
 

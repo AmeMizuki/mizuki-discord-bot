@@ -28,13 +28,14 @@
 ## 支援平台
 - [x] Twitter/X
 - [x] Pixiv
-- [x] PTT
 - [x] Bilibili
 - [x] PChome
 - [x] Civitai
 - [x] Reddit
 - [x] E-Hentai & ExHentai
+- [x] Misskey
 - [x] YouTube
+- [ ] ~~PTT~~（已移除 - 伺服器被阻擋）
 
 ## 檔案結構
 
@@ -128,7 +129,7 @@ node index.js
    - 點擊 ❤️ 表情符號或使���右鍵應用程式集指令「Favorite Image」後，會收到包含美觀圖片 Embed 及原始訊息連結的私訊。
 
 2. **多平台網址轉換**：當有人發送支援平台的連結時，機器人會：
-   - 自動偵測來自 Twitter/X、Pixiv、PTT、Bilibili 和 PChome 的網址
+   - 自動偵測來自 Twitter/X、Pixiv、Bilibili、PChome、Civitai、Reddit、E-Hentai/ExHentai 和 Misskey 的網址
    - 抑制 Discord 的原生嵌入以提供更佳呈現效果
    - 建立平台專屬格式的增強型嵌入訊息
    - **Twitter/X**：在多個嵌入區塊中顯示推文的多張圖片，透過 fxtwitter 連結處理影片，並具備 vxtwitter 自動備用機制
@@ -175,6 +176,11 @@ node index.js
 3. 使用 `module.exports` 導出需要的函式
 
 ## 更新日誌 (Changelog)
+
+### 版本 1.5.5 (2026-06-15)
+
+*   **問題修復：** 連結嵌入（Twitter/X 及其他平台）有時要等到重新整理 Discord 後才會被抑制。Discord 會在訊息建立*之後*才非同步補上連結預覽，因此在訊息建立當下立即抑制，可能會搶在嵌入還沒出現時執行而失效。現在新增了 `messageUpdate` 監聽器，在嵌入實際出現時將其抑制，確保不需重新整理就能可靠地移除原生預覽。
+*   **問題修復：** Misskey 筆記若包含多張圖片，現在會合併到單一嵌入中，而不再被拆散到多個嵌入區塊。
 
 ### 版本 1.5.4 (2025-09-16)
 

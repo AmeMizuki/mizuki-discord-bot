@@ -305,7 +305,7 @@ client.on('messageCreate', async message => {
 	if (hasUrlsToProcess) {
 		try {
 			await message.suppressEmbeds(true);
-			console.log(`Fast suppressed embeds for message: ${message.id}`);
+			// console.log(`Fast suppressed embeds for message: ${message.id}`);
 		}
 		catch (error) {
 			console.error('Failed to fast suppress embeds:', error);
@@ -338,6 +338,23 @@ client.on('messageCreate', async message => {
 		catch (error) {
 			console.error('Failed to add reaction:', error);
 		}
+	}
+});
+
+client.on('messageUpdate', async (oldMessage, newMessage) => {
+	if (newMessage.author?.bot) return;
+	if (newMessage.embeds.length === 0) return;
+	if ((newMessage.flags?.bitfield & 4) !== 0) return; // already SUPPRESS_EMBEDS
+
+	const urlConversionService = new UrlConversionService();
+	if (!urlConversionService.hasUrlsToProcess(newMessage.content)) return;
+
+	try {
+		await newMessage.suppressEmbeds(true);
+		// console.log(`Suppressed late embed for message: ${newMessage.id}`);
+	}
+	catch (error) {
+		console.error('Failed to suppress late embed:', error);
 	}
 });
 
