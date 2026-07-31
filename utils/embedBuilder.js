@@ -95,22 +95,6 @@ async function createMetadataEmbed(metadata, user, imageUrl = null) {
 	return embed;
 }
 
-async function sendMetadataReply(channel, authorId, metadata, sourceMessageUrl, imageUrl, originalAuthor) {
-	const embed = await createMetadataEmbed(metadata, originalAuthor, imageUrl);
-
-	try {
-		const client = channel.client;
-		const user = await client.users.fetch(authorId);
-		await user.send({ embeds: [embed] });
-		if (sourceMessageUrl) {
-			await user.send(`[原始訊息連結](${sourceMessageUrl})`);
-		}
-	}
-	catch (error) {
-		console.error(`Could not DM user ${authorId}:`, error);
-	}
-}
-
 async function createFavoriteImageEmbed(imageUrl, messageUrl, user) {
 	const embed = new EmbedBuilder()
 		.setTitle('❤️ 收藏圖片')
@@ -229,7 +213,6 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 
 module.exports = {
 	createMetadataEmbed,
-	sendMetadataReply,
 	createFavoriteImageEmbed,
 	createTweetEmbed,
 };

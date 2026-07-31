@@ -7,8 +7,7 @@
     "exif-parser": "^0.1.12",
     "node-fetch": "^2.6.7",
     "png-chunk-text": "^1.0.0",
-    "png-chunks-extract": "^1.0.0",
-    "rss-parser": "^3.13.0"
+    "png-chunks-extract": "^1.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

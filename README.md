@@ -12,17 +12,12 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 
 ## Features
 
-- 🔍 Automatically adds a magnifying glass emoji to image messages in monitored channels.
-- ❤️ Automatically adds a heart emoji to image messages in monitored channels.
-- 📊 Extracts and displays Stable Diffusion parameters (prompt, negative prompt, model, etc.).
+- 📊 Extracts and displays Stable Diffusion parameters (prompt, negative prompt, model, etc.) via a right-click context menu command ("檢查圖片資訊").
 - 💬 Replies via private message to protect user privacy.
-- ⚙️ Administrators can set monitored channels.
-- 💾 Monitored channel settings are persistently saved.
-- ⭐ **Favorite image function**: Users can favorite images via heart emoji reaction or a right-click context menu command ("Favorite Image"). Favorited images are sent to the user via private message in an aesthetically pleasing embed format, including the image itself and a link to the original message.
+- ⭐ **Favorite image function**: Users can favorite images via a right-click context menu command ("收藏圖片"). Favorited images are sent to the user via private message in an aesthetically pleasing embed format, including the image itself and a link to the original message.
 - 🔗 **Multi-Platform URL Conversion**: Automatically converts links from various platforms to enhanced embeds.
 - 🖼️ **Multi-Image Support**: Displays multiple images from supported platforms in a single message using multiple embeds.
 - 💰 **Steam Sale Notifications**: Automatically fetch and display Steam game sale information and push notifications to a designated channel.
-- 🎬 **YouTube Channel Tracking**: Monitors specified YouTube channels for new video uploads, sending plain link notifications to a designated Discord channel.
 - 🎀 Cute response tone.
 
 ## Supported Features
@@ -30,12 +25,9 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - [x] Pixiv
 - [x] Bilibili
 - [x] PChome
-- [x] Civitai
 - [x] Reddit
 - [x] E-Hentai & ExHentai
 - [x] Misskey
-- [x] YouTube
-- [ ] ~~PTT~~ (removed - the server was blocked)
 
 ## File Structure
 
@@ -54,8 +46,6 @@ discordbot/
 │   │   └── twitterUtils.js       # Twitter utility functions
 │   ├── pixiv/
 │   │   └── pixivService.js       # Pixiv artwork URL processing
-│   ├── ptt/
-│   │   └── pttService.js         # PTT post URL processing
 │   ├── bilibili/
 │   │   └── bilibiliService.js    # Bilibili video/content URL processing
 │   ├── pchome/
@@ -66,7 +56,6 @@ discordbot/
 └── utils/
     ├── metadata.js               # Metadata parsing utilities
     ├── embedBuilder.js           # Discord Embed construction utilities
-    ├── channelStorage.js         # Channel settings persistence utilities
     └── steamStorage.js           # Steam game data persistence utilities
 ```
 
@@ -88,61 +77,27 @@ CLIENT_ID=YOUR_BOT_CLIENT_ID
 node index.js
 ```
 
-## Monitored Channel Settings
-
-If you need to set up manually, refer to the `monitored_channels.example.json` format:
-
-```json
-{
-  "channels": [
-    "CHANNEL_ID_1",
-    "CHANNEL_ID_2"
-  ],
-  "lastUpdated": "2024-01-01T00:00:00.000Z"
-}
-```
-
-**Note**:
-- If the `channels` array is empty, the bot will not automatically monitor any channels.
-- Only channels set via the `/setchannel` command will be monitored.
-- Settings will persist after bot restarts.
-
 ## Usage
 
-### Slash Commands
+### Commands
 
-- `/finddata` - Upload an image to view its metadata.
-- `/setchannel` - Set monitored channels (administrator only).
-  - `action: Add Channel` - Add a channel to the monitored list.
-  - `action: Remove Channel` - Remove a channel from the monitored list.
-  - `action: Clear All Channels` - Clear the monitored list (bot will not monitor any channels automatically).
-  - `action: View Current Channels` - View currently monitored channels.
-- `/youtube` - YouTube Channel Tracking (Admin only).
-  - `add [channel_id]` - Start tracking a YouTube channel for new video notifications. Requires the YouTube Channel ID (e.g., `UC...`).
-  - `remove [channel_id]` - Stop tracking a YouTube channel. Requires the YouTube Channel ID.
-  - 📖 **[Detailed YouTube Channel Monitoring Guide](youtube-channel.md)** - Complete guide on how to get Channel ID and use monitoring features.
+- Right-click a message → "檢查圖片資訊" (View Image Info) - Sends the image's metadata to you via private message. Manual trigger only.
+- Right-click a message → "收藏圖片" (Favorite Image) - Sends the image to you via private message in an aesthetically pleasing embed, along with a link to the original message. Manual trigger only.
 
 ### Automatic Features
 
-1. **Image Metadata Extraction**: When someone uploads an image in a monitored channel, Akiyama Mizuki will automatically add 🔍 and ❤️ emojis.
-   - Clicking the 🔍 emoji will send a private message containing the image's metadata.
-   - Clicking the ❤️ emoji or using the right-click context menu command "Favorite Image" will send a private message with an aesthetically pleasing embed of the image and a link to the original message.
-
-2. **Multi-Platform URL Conversion**: When someone posts links from supported platforms, the bot will:
-   - Automatically detect URLs from Twitter/X, Pixiv, Bilibili, PChome, Civitai, Reddit, E-Hentai/ExHentai, and Misskey
+1. **Multi-Platform URL Conversion**: When someone posts links from supported platforms, the bot will:
+   - Automatically detect URLs from Twitter/X, Pixiv, Bilibili, PChome, Reddit, E-Hentai/ExHentai, and Misskey
    - Suppress Discord's native embeds for better presentation
    - Create enhanced embeds with platform-specific formatting
-   - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fxtwitter links with automatic vxtwitter fallback
+   - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fixupx.com links with automatic fixvx.com fallback
    - **Pixiv**: Show artwork previews with artist information
-   - ~~**PTT**: Display post content with proper formatting~~ (PTT is no longer supported due to certain server provider being blocked.)
    - **Bilibili**: Provide video/content previews
    - **PChome**: Show product information including images, names, prices, and feature highlights
    - Provide fallback links if processing fails
    - **Misskey**: Show note content with appropriate formatting, including images and videos
 
-3. **Steam Sale Notifications**: Automatically fetch the latest Steam game sale information daily and send notifications to a designated channel. Users can also manually query for sale information using a slash command.
-
-4. **YouTube Notifications**: When a new video is detected on a tracked YouTube channel, a plain link notification will be sent to the designated Discord channel in the format: "New video upload! {Channel Name} : {Link}".
+2. **Steam Sale Notifications**: Automatically fetch the latest Steam game sale information daily and send notifications to a designated channel. Users can also manually query for sale information using a slash command.
 
 ## Supported Image Formats
 
@@ -155,7 +110,6 @@ If you need to set up manually, refer to the `monitored_channels.example.json` f
 - `config.js` - Centralized management of configurations and environment variables.
 - `utils/metadata.js` - Handles image metadata parsing.
 - `utils/embedBuilder.js` - Constructs Discord embed messages.
-- `utils/channelStorage.js` - Handles persistent storage of monitored channel settings.
 - `commands/index.js` - Handles slash command logic.
 - `services/` - **NEW**: Modular URL conversion services architecture.
 
@@ -176,6 +130,13 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 1.6.0 (2026-07-31)
+
+*   **Change:** Twitter/X fallback links now default to `fixupx.com`, with `fixvx.com` as the backup domain (replacing `fxtwitter.com`/`vxtwitter.com`).
+*   **Removed:** Automatic channel-based image monitoring (the `/setimage` command and auto-added 🔍/❤️ reactions). Image metadata lookup and favoriting are now only available via the "檢查圖片資訊" and "收藏圖片" right-click context menu commands.
+*   **Removed:** Civitai and PTT URL conversion services.
+*   **Removed:** YouTube channel tracking (the `/youtube` command and related monitoring).
 
 ### Version 1.5.5 (2026-06-15)
 

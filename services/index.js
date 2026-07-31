@@ -1,10 +1,8 @@
 const TwitterService = require('./twitter/twitterService');
 const PixivService = require('./pixiv/pixivService');
-// const PttService = require('./ptt/pttService');
 const BilibiliService = require('./bilibili/bilibiliService');
 const PchomeService = require('./pchome/pchomeService');
 const RedditService = require('./reddit/redditService');
-// const CivitaiService = require('./civitai/civitaiService');
 const EhentaiService = require('./ehentai/ehentaiService');
 const MisskeyService = require('./misskey/misskeyService');
 const { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
@@ -15,11 +13,9 @@ class UrlConversionService {
 		this.services = [
 			new TwitterService(),
 			new PixivService(),
-			// new PttService(),
 			new BilibiliService(),
 			new PchomeService(),
 			new RedditService(),
-			// new CivitaiService(),
 			new EhentaiService(),
 			new MisskeyService(),
 		];
@@ -306,11 +302,9 @@ module.exports = {
 	UrlConversionService,
 	TwitterService,
 	PixivService,
-	// PttService,
 	BilibiliService,
 	PchomeService,
 	RedditService,
-	// CivitaiService,
 	EhentaiService,
 	MisskeyService,
 };

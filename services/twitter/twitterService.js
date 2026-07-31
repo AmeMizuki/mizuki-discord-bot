@@ -23,7 +23,7 @@ class TwitterService {
 		if (!tweetResult) {
 			return {
 				type: 'fallback',
-				content: this.createFallbackLink(url, 'Failed to get detailed information', 'fxtwitter'),
+				content: this.createFallbackLink(url, 'Failed to get detailed information', 'fixupx'),
 			};
 		}
 
@@ -62,8 +62,8 @@ class TwitterService {
 		};
 	}
 
-	createFallbackLink(originalUrl, reason = '', source = 'fxtwitter') {
-		const domain = source === 'vxtwitter' ? 'vxtwitter.com' : 'fxtwitter.com';
+	createFallbackLink(originalUrl, reason = '', source = 'fixupx') {
+		const domain = source === 'vxtwitter' ? 'fixvx.com' : 'fixupx.com';
 		const convertedLink = originalUrl.replace(/(twitter\.com|x\.com)/, domain);
 
 		const reasonText = reason ? ` (${reason})` : '';

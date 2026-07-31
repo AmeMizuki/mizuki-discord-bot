@@ -2,16 +2,12 @@ const { Client, GatewayIntentBits, Partials, Routes } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 
 // 導入配置和工具模組
-const { BOT_TOKEN, CLIENT_ID, MONITORED_CHANNELS } = require('./config');
-const { getMetadata } = require('./utils/metadata');
-const { sendMetadataReply, createFavoriteImageEmbed } = require('./utils/embedBuilder');
+const { BOT_TOKEN, CLIENT_ID } = require('./config');
 const { UrlConversionService } = require('./services');
 const { loadReactionRoles } = require('./utils/reactionRoleStorage');
 const { commands, ...commandHandlers } = require('./commands');
 const { loadSteamMonitoredChannels } = require('./utils/steamStorage');
 const SteamService = require('./services/steam/steamService');
-const { loadYouTubeMonitoredChannels, saveYouTubeMonitoredChannels } = require('./utils/youtubeStorage');
-const YouTubeService = require('./services/youtube/youtubeService');
 
 // 確保 Bot 有權限讀取訊息內容、訊息歷史、發送訊息、管理表情符號等
 const client = new Client({
@@ -33,9 +29,6 @@ const client = new Client({
 // Steam service instance
 const steamService = new SteamService();
 
-// YouTube service instance
-const youtubeService = new YouTubeService();
-
 client.on('ready', async () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 
@@ -52,9 +45,6 @@ client.on('ready', async () => {
 
 	// Start Steam deals monitoring
 	startSteamMonitoring();
-
-	// Start YouTube monitoring
-	startYouTubeMonitoring();
 });
 
 // Steam monitoring function
@@ -115,68 +105,14 @@ function startSteamMonitoring() {
 	}, initialDelay);
 }
 
-// YouTube monitoring function
-async function checkYouTubeVideos() {
-	try {
-		let monitoredChannels = loadYouTubeMonitoredChannels();
-		if (monitoredChannels.length === 0) {
-			return;
-		}
-
-		for (const entry of monitoredChannels) {
-			const { channelId, youtubeChannelId, lastVideoId } = entry;
-			const channel = await client.channels.fetch(channelId).catch(console.error);
-
-			if (!channel) {
-				console.warn(`YouTube monitoring: Channel ${channelId} not found, removing from list.`);
-				monitoredChannels = monitoredChannels.filter(c => c.channelId !== channelId);
-				saveYouTubeMonitoredChannels(monitoredChannels);
-				continue;
-			}
-
-			const latestVideo = await youtubeService.fetchLatestVideo(youtubeChannelId);
-
-			if (latestVideo) {
-				if (latestVideo.id !== lastVideoId) {
-					await channel.send(`新影片上傳囉！ ${latestVideo.author}: ${latestVideo.link}`).catch(console.error);
-					console.log(`Sent new YouTube video for ${youtubeChannelId} to ${channel.name}`);
-
-					entry.lastVideoId = latestVideo.id;
-					saveYouTubeMonitoredChannels(monitoredChannels);
-				}
-			}
-		}
-	}
-	catch (error) {
-		console.error('Error checking YouTube videos:', error);
-	}
-}
-
-function startYouTubeMonitoring() {
-	const YOUTUBE_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
-	console.log(`Starting YouTube monitoring. Checking every ${YOUTUBE_CHECK_INTERVAL / (60 * 60 * 1000)} hours.`);
-
-	checkYouTubeVideos();
-
-	setInterval(checkYouTubeVideos, YOUTUBE_CHECK_INTERVAL);
-}
-
 client.on('interactionCreate', async interaction => {
 	if (interaction.isChatInputCommand()) {
-		if (interaction.commandName === 'setimage') {
-			await commandHandlers.handleSetImageCommand(interaction);
-		}
-
 		if (interaction.commandName === 'reactmessage') {
 			await commandHandlers.handleReactMessageCommand(interaction);
 		}
 
 		if (interaction.commandName === 'steam') {
 			await commandHandlers.handleSteamCommand(interaction);
-		}
-
-		if (interaction.commandName === 'youtube') {
-			await commandHandlers.handleYouTubeCommand(interaction);
 		}
 	}
 	else if (interaction.isContextMenuCommand()) {
@@ -206,51 +142,6 @@ client.on('messageReactionAdd', async (reaction, user) => {
 	if (reaction.message.partial) {
 		try { await reaction.message.fetch(); }
 		catch (error) { console.error('Error fetching message:', error); return; }
-	}
-
-	// Logic for 🔍 and ❤️ reactions
-	if (reaction.emoji.name === '🔍' || reaction.emoji.name === '❤️') {
-		const message = reaction.message;
-		const imageAttachments = message.attachments.filter(att => att.contentType && att.contentType.startsWith('image/'));
-
-		if (imageAttachments.size > 0) {
-			for (const imageAttachment of imageAttachments.values()) {
-				try {
-					if (reaction.emoji.name === '🔍') {
-						// Removed prompt message
-					}
-					else if (reaction.emoji.name === '❤️') {
-						// Removed prompt message
-					}
-				}
-				catch (error) {
-					console.warn(`Could not DM user ${user.tag}. They might have DMs disabled or bot is blocked. Error:`, error);
-				}
-
-				const metadata = await getMetadata(imageAttachment.url, imageAttachment.contentType);
-
-				if (reaction.emoji.name === '❤️') {
-					try {
-						const favoriteEmbed = await createFavoriteImageEmbed(imageAttachment.url, message.url, user);
-						await user.send({ embeds: [favoriteEmbed] });
-					}
-					catch (error) {
-						console.error('Failed to send favorite image to user:', error);
-					}
-				}
-				else {
-					await sendMetadataReply(message.channel, user.id, metadata, null, imageAttachment.url, message.author);
-				}
-			}
-		}
-		else {
-			try {
-				await user.send('This message has no image attachments. I cannot extract information.');
-			}
-			catch (error) {
-				console.warn(`Could not DM user ${user.tag}. Error:`, error);
-			}
-		}
 	}
 
 	// Reaction Role Logic
@@ -316,28 +207,6 @@ client.on('messageCreate', async message => {
 
 	if (conversionResults.length > 0) {
 		await urlConversionService.sendResults(conversionResults, message.channel, message);
-	}
-
-	const monitoredChannels = MONITORED_CHANNELS;
-	const channelConfig = monitoredChannels[message.channel.id];
-
-	// Check if the channel is monitored for images
-	if (!channelConfig || !channelConfig.image) {
-		return;
-	}
-
-	const imageAttachments = message.attachments.filter(att =>
-		att.contentType && att.contentType.startsWith('image/'),
-	);
-
-	if (imageAttachments.size > 0) {
-		try {
-			await message.react('🔍');
-			await message.react('❤️');
-		}
-		catch (error) {
-			console.error('Failed to add reaction:', error);
-		}
 	}
 });
 

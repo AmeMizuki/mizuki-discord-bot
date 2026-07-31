@@ -12,17 +12,12 @@
 
 ## 功能特色
 
-- 🔍 自動監聽圖片並添加放大鏡表情符號
-- ❤️ 自動監聽圖片並添加愛心表情符號
-- 📊 提取並顯示 Stable Diffusion 參數（prompt、negative prompt、model 等）
+- 📊 透過右鍵應用程式集指令（「檢查圖片資訊」）提取並顯示 Stable Diffusion 參數（prompt、negative prompt、model 等）
 - 💬 私訊回覆，保護用戶隱私
-- ⚙️ 管理員可設定監聽頻道
-- 💾 監聽頻道設定會持久化保存
-- ⭐ **收藏圖片功能**：使用者可以透過愛心表情符號反應或右鍵應用程式集指令（「Favorite Image」）來收藏圖片。收藏的圖片會以美觀的嵌入式訊息格式透過私訊傳送給使用者，其中包含圖片本身及原始訊息連結。
+- ⭐ **收藏圖片功能**：使用者可以透過右鍵應用程式集指令（「收藏圖片」）來收藏圖片。收藏的圖片會以美觀的嵌入式訊息格式透過私訊傳送給使用者，其中包含圖片本身及原始訊息連結。
 - 🔗 **多平台網址轉換**：自動轉換各種平台連結為增強型嵌入訊息。
 - 🖼️ **多圖片支援**：在單一訊息中使用多個嵌入區塊顯示支援平台的多張圖片。
 - 💰 **Steam 特賣通知**：自動抓取並顯示 Steam 遊戲特賣資訊，並推播通知到指定頻道。
-- 🎬 **YouTube 頻道追蹤**：監控指定的 YouTube 頻道，以便在新影片上傳時，發送純連結通知到指定的 Discord 頻道。
 - 🎀 可愛的回應語氣
 
 ## 支援平台
@@ -30,12 +25,9 @@
 - [x] Pixiv
 - [x] Bilibili
 - [x] PChome
-- [x] Civitai
 - [x] Reddit
 - [x] E-Hentai & ExHentai
 - [x] Misskey
-- [x] YouTube
-- [ ] ~~PTT~~（已移除 - 伺服器被阻擋）
 
 ## 檔案結構
 
@@ -54,8 +46,6 @@ discordbot/
 │   │   └── twitterUtils.js       # Twitter 工具函式
 │   ├── pixiv/
 │   │   └── pixivService.js       # Pixiv 作品網址處理
-│   ├── ptt/
-│   │   └── pttService.js         # PTT 文章網址處理
 │   ├── bilibili/
 │   │   └── bilibiliService.js    # Bilibili 影片/內容網址處理
 │   ├── pchome/
@@ -66,7 +56,6 @@ discordbot/
 └── utils/
     ├── metadata.js               # Metadata 解析工具
     ├── embedBuilder.js           # Discord Embed 建構工具
-    └── channelStorage.js         # 頻道設定持久化工具
     └── steamStorage.js           # Steam 遊戲資料持久化工具
 ```
 
@@ -88,61 +77,27 @@ CLIENT_ID=你的機器人CLIENT_ID
 node index.js
 ```
 
-## 監聽頻道設定
-
-如果需要手動設定，可參考 `monitored_channels.example.json` 的格式：
-
-```json
-{
-  "channels": [
-    "頻道ID1",
-    "頻道ID2"
-  ],
-  "lastUpdated": "2024-01-01T00:00:00.000Z"
-}
-```
-
-**注意**：
-- 如果 `channels` 陣列為空，機器人不會自動監聽任何頻道
-- 只有透過 `/setchannel` 指令設定的頻道才會被監聽
-- 設定會在機器人重啟後保持
-
 ## 使用方式
 
-### 斜線指令
+### 指令
 
-- `/finddata` - 上傳圖片查看 metadata
-- `/setchannel` - 設定監聽頻道（僅管理員可用）
-  - `action: 添加頻道` - 添加頻道到監聽清單
-  - `action: 移除頻道` - 從監聽清單移除頻道
-  - `action: 清空所有頻道` - 清空監聽清單（不會監聽任何頻道）
-  - `action: 查看當前頻道` - 查看目前監聽的頻道
-- `/youtube` - YouTube 頻道追蹤 (僅管理員可用)
-  - `add [channel_id]` - 開始追蹤一個 YouTube 頻道的新影片通知。需要 YouTube 頻道 ID（例如：`UC...`）。
-  - `remove [channel_id]` - 停止追蹤一個 YouTube 頻道。需要 YouTube 頻道 ID。
-  - 📖 **[詳細 YouTube 頻道監控使用指南](youtube-channel.zh-tw.md)** - 完整說明如何獲取頻道 ID 和使用監控功能。
+- 右鍵訊息 → 「檢查圖片資訊」- 將圖片的 metadata 透過私訊傳送給你。僅能手動觸發。
+- 右鍵訊息 → 「收藏圖片」- 將圖片以美觀的嵌入式訊息透過私訊傳送給你，並附上原始訊息連結。僅能手動觸發。
 
 ### 自動功能
 
-1. **圖片 Metadata 提取**：當有人在監聽頻道上傳圖片時，曉山瑞希會自動添加 🔍 和 ❤️ 表情符號。
-   - 點擊 🔍 表情符號後，會收到包含圖片 metadata 的私訊。
-   - 點擊 ❤️ 表情符號或使���右鍵應用程式集指令「Favorite Image」後，會收到包含美觀圖片 Embed 及原始訊息連結的私訊。
-
-2. **多平台網址轉換**：當有人發送支援平台的連結時，機器人會：
-   - 自動偵測來自 Twitter/X、Pixiv、Bilibili、PChome、Civitai、Reddit、E-Hentai/ExHentai 和 Misskey 的網址
+1. **多平台網址轉換**：當有人發送支援平台的連結時，機器人會：
+   - 自動偵測來自 Twitter/X、Pixiv、Bilibili、PChome、Reddit、E-Hentai/ExHentai 和 Misskey 的網址
    - 抑制 Discord 的原生嵌入以提供更佳呈現效果
    - 建立平台專屬格式的增強型嵌入訊息
-   - **Twitter/X**：在多個嵌入區塊中顯示推文的多張圖片，透過 fxtwitter 連結處理影片，並具備 vxtwitter 自動備用機制
+   - **Twitter/X**：在多個嵌入區塊中顯示推文的多張圖片，透過 fixupx.com 連結處理影片，並具備 fixvx.com 自動備用機制
    - **Pixiv**：顯示作品預覽與作者資訊
-   - ~~**PTT**：顯示文章內容與適當格式化~~ (PTT 已不再支援，因為某些伺服器提供者被阻擋。)
    - **Bilibili**：提供影片/內容預覽
    - **PChome**：顯示商品資訊包含圖片、名稱、價格和特色標語
    - 在處理失敗時提供備用連結
    - **Misskey**：顯示筆記內容與適當格式化，包含圖片和影片
 
-3. **Steam 特賣通知**：每日自動抓取最新的 Steam 遊戲特賣資訊，並發送通知到指定頻道。使用者也可以透過斜線指令手動查詢特賣資訊。
-
-4. **YouTube 通知**：當在追蹤的 YouTube 頻道偵測到新影片時，會發送純連結通知到指定的 Discord 頻道，格式為：「新影片上傳囉！ {頻道名稱} : {連結}」。
+2. **Steam 特賣通知**：每日自動抓取最新的 Steam 遊戲特賣資訊，並發送通知到指定頻道。使用者也可以透過斜線指令手動查詢特賣資訊。
 
 ## 支援的圖片格式
 
@@ -155,7 +110,6 @@ node index.js
 - `config.js` - 集中管理配置和環境��數
 - `utils/metadata.js` - 處理圖片 metadata 解析
 - `utils/embedBuilder.js` - 建構 Discord embed 訊息
-- `utils/channelStorage.js` - 處理監聽頻道的持久化存儲
 - `commands/index.js` - 處理斜線指令邏輯
 - `services/` - **新增**：模組化網址轉換服務架構
 
@@ -176,6 +130,13 @@ node index.js
 3. 使用 `module.exports` 導出需要的函式
 
 ## 更新日誌 (Changelog)
+
+### 版本 1.6.0 (2026-07-31)
+
+*   **變更：** Twitter/X 備用連結預設改為 `fixupx.com`，並以 `fixvx.com` 作為備用網域（取代 `fxtwitter.com`/`vxtwitter.com`）。
+*   **移除功能：** 移除自動判定頻道的圖片監聽功能（`/setimage` 指令及自動添加的 🔍/❤️ 反應）。圖片 metadata 查閱與收藏功能現在只能透過「檢查圖片資訊」與「收藏圖片」右鍵應用程式集指令手動觸發。
+*   **移除功能：** 移除 Civitai 和 PTT 網址轉換服務。
+*   **移除功能：** 移除 YouTube 頻道追蹤功能（`/youtube` 指令及相關監控）。
 
 ### 版本 1.5.5 (2026-06-15)
 
