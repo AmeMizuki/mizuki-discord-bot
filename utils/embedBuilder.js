@@ -1,3 +1,5 @@
+const axios = require('axios');
+const cheerio = require('cheerio');
 const { EmbedBuilder } = require('discord.js');
 const { EMBED_COLORS } = require('../config');
 const { parseStableDiffusionMetadata, parseComfyUIMetadata, parseSwarmUIMetadata } = require('./metadata');
@@ -211,8 +213,99 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 	return embeds;
 }
 
+async function createThreadsEmbed(post, originalUrl, imageUrls = []) {
+	const embeds = [];
+
+	const buildBase = () => {
+		const embed = new EmbedBuilder()
+			.setColor(EMBED_COLORS.GRAY)
+			.setAuthor({
+				name: `@${post.author.username} (${post.author.full_name})`,
+				iconURL: post.author.avatar_url,
+				url: post.author.url,
+			})
+			.setTimestamp(new Date(post.timestamp * 1000));
+
+		if (post.content) {
+			embed.setDescription(post.content);
+		}
+
+		if (post.stats) {
+			embed.addFields(
+				{ name: '❤️ Likes', value: post.stats.likes.toLocaleString(), inline: true },
+				{ name: '💬 Comments', value: post.stats.comments.toLocaleString(), inline: true },
+				{ name: '🔁 Reposts', value: post.stats.reposts.toLocaleString(), inline: true },
+			);
+		}
+
+		embed.addFields({
+			name: '🔗 Source',
+			value: `[Threads](${originalUrl})`,
+			inline: false,
+		});
+
+		return embed;
+	};
+
+	if (imageUrls.length === 0) {
+		embeds.push(buildBase());
+	}
+	else {
+		// Same trick as createTweetEmbed: multiple embeds sharing one URL make
+		// Discord group them into a gallery, capped at 4 like X's preview.
+		imageUrls.slice(0, 4).forEach((imageUrl) => {
+			embeds.push(buildBase().setImage(imageUrl).setURL(originalUrl));
+		});
+	}
+
+	return embeds;
+}
+
+// Scrapes a fix-domain page's Open Graph tags and builds an embed from them,
+// so the reply can carry just the embed instead of a visible raw link.
+// Returns null when there's a video (a bot-built embed can't autoplay one -
+// Discord's own unfurl needs the link visible for that) or nothing usable was found.
+async function fetchOgEmbed(url) {
+	try {
+		const { data } = await axios.get(url, {
+			timeout: 7000,
+			headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)' },
+		});
+		const $ = cheerio.load(data);
+		const getMeta = (property) => $(`meta[property="${property}"]`).attr('content') || $(`meta[name="${property}"]`).attr('content');
+
+		if (getMeta('og:video') || getMeta('og:video:url')) {
+			return null;
+		}
+
+		const title = getMeta('og:title');
+		const description = getMeta('og:description');
+		const image = getMeta('og:image');
+
+		if (!title && !image) {
+			return null;
+		}
+
+		const embed = new EmbedBuilder()
+			.setColor(EMBED_COLORS.GRAY)
+			.setURL(url);
+
+		if (title) embed.setTitle(title.substring(0, 256));
+		if (description) embed.setDescription(description.substring(0, 4000));
+		if (image) embed.setImage(image);
+
+		return embed;
+	}
+	catch (error) {
+		console.warn(`OG embed fetch failed for ${url}: ${error.message}`);
+		return null;
+	}
+}
+
 module.exports = {
 	createMetadataEmbed,
 	createFavoriteImageEmbed,
 	createTweetEmbed,
+	createThreadsEmbed,
+	fetchOgEmbed,
 };

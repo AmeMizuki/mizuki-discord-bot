@@ -1,6 +1,25 @@
+// Matches twitter.com/x.com and their FxEmbed mirrors, with or without a handle
+// (`/user/status/1`, `/i/web/status/1`, `/status/1`, `/user/status/1/ja`).
+const TWEET_URL_REGEX = /(?:twitter\.com|x\.com|fxtwitter\.com|vxtwitter\.com|fixupx\.com|fixvx\.com|twittpr\.com)((?:\/[^/?#]+)*)\/(?:status|statuses)\/(\d+)/i;
+
+function parseTweetUrl(url) {
+	const match = url.match(TWEET_URL_REGEX);
+	if (!match) {
+		return null;
+	}
+
+	const handle = match[1].split('/').filter(segment => segment && segment !== 'i' && segment !== 'web').pop();
+
+	return { screenName: handle || null, tweetId: match[2] };
+}
+
 function getTweetIdFromUrl(url) {
-	const match = url.match(/(?:twitter\.com|x\.com)\/\S+\/status\/(\d+)/);
-	return match ? match[1] : null;
+	const parsed = parseTweetUrl(url);
+	return parsed ? parsed.tweetId : null;
+}
+
+function buildTranslatedTweetUrl(tweet, language) {
+	return `https://fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}/${language}`;
 }
 
 function convertVxTwitterData(vxData) {
@@ -46,6 +65,7 @@ function convertVxTwitterMedia(mediaExtended) {
 				thumbnail_url: item.thumbnail_url || null,
 				width: item.width || null,
 				height: item.height || null,
+				type: item.type,
 			});
 		}
 	});
@@ -127,6 +147,8 @@ async function fetchTweetData(tweetId) {
 
 module.exports = {
 	getTweetIdFromUrl,
+	parseTweetUrl,
+	buildTranslatedTweetUrl,
 	fetchTweetData,
 	convertVxTwitterData,
 };

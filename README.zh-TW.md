@@ -4,11 +4,23 @@
 
 # 曉山瑞希 Discord Bot
 
-如果你遇到任何問題請加入 Discord 伺服器發問： [瑞希 Bot](https://discord.gg/avMvrhdX3r)
+邀請機器人加入你的伺服器： [安裝瑞希 Bot](https://discord.com/oauth2/authorize?client_id=1381902438168264734)
 
 一個可愛的 Discord 機器人，專門用來提取和顯示圖片中的 Stable Diffusion metadata 資訊，並支援多平台網址轉換和多圖片嵌入功能。
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
+
+## 目錄
+
+- [功能特色](#功能特色)
+- [支援平台](#支援平台)
+- [檔案結構](#檔案結構)
+- [安裝與設定](#安裝與設定)
+- [使用方式](#使用方式)
+- [支援的圖片格式](#支援的圖片格式)
+- [開發說明](#開發說明)
+- [更新日誌 (Changelog)](#更新日誌-changelog)
+- [授權](#授權)
 
 ## 功能特色
 
@@ -21,6 +33,7 @@
 - 🎀 可愛的回應語氣
 
 ## 支援平台
+
 - [x] Twitter/X
 - [x] Pixiv
 - [x] Bilibili
@@ -28,6 +41,10 @@
 - [x] Reddit
 - [x] E-Hentai & ExHentai
 - [x] Misskey
+- [x] Facebook
+- [x] TikTok
+- [x] Instagram
+- [x] Threads
 
 ## 檔案結構
 
@@ -38,7 +55,8 @@ discordbot/
 ├── package.json                  # 依賴管理
 ├── .env                          # 環境變數（需自行創建）
 ├── commands/
-│   └── index.js                  # 斜線指令處理
+│   ├── index.js                  # 斜線指令處理
+│   └── translateCommands.js      # /translate 斜線指令（推文翻譯連結）
 ├── services/                     # 網址轉換服務
 │   ├── index.js                  # 服務管理器
 │   ├── twitter/
@@ -52,6 +70,14 @@ discordbot/
 │   │   └── pchomeService.js      # PChome 24h購物網址處理
 │   ├── ehentai/
 │   │   └── ehentaiService.js     # E-Hentai & ExHentai URL 處理
+│   ├── facebook/
+│   │   └── facebookService.js    # Facebook 網址處理（facebed.com）
+│   ├── tiktok/
+│   │   └── tiktokService.js      # TikTok 網址處理（tnktok.com）
+│   ├── instagram/
+│   │   └── instagramService.js   # Instagram 網址處理（oginstagram.com/zzinstagram.com）
+│   ├── threads/
+│   │   └── threadsService.js     # Threads 網址處理（FxThreads）
 │   └── README.md                 # 服務架構說明文件
 └── utils/
     ├── metadata.js               # Metadata 解析工具
@@ -62,40 +88,49 @@ discordbot/
 ## 安裝與設定
 
 1. 安裝依賴套件：
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 2. 創建 `.env` 檔案：
-```env
-BOT_TOKEN=你的機器人TOKEN
-CLIENT_ID=你的機器人CLIENT_ID
-```
+   ```env
+   BOT_TOKEN=你的機器人TOKEN
+   CLIENT_ID=你的機器人CLIENT_ID
+   ```
 
 3. 啟動機器人：
-```bash
-node index.js
-```
+   ```bash
+   node index.js
+   ```
 
 ## 使用方式
 
 ### 指令
 
-- 右鍵訊息 → 「檢查圖片資訊」- 將圖片的 metadata 透過私訊傳送給你。僅能手動觸發。
-- 右鍵訊息 → 「收藏圖片」- 將圖片以美觀的嵌入式訊息透過私訊傳送給你，並附上原始訊息連結。僅能手動觸發。
+| 指令 | 說明 |
+| --- | --- |
+| 右鍵訊息 → 「檢查圖片資訊」 | 將圖片的 metadata 透過私訊傳送給你。僅能手動觸發。 |
+| 右鍵訊息 → 「收藏圖片」 | 將圖片以美觀的嵌入式訊息透過私訊傳送給你，並附上原始訊息連結。僅能手動觸發。 |
+| `/translate` | 輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`cn`、`en`、`jp` 等），機器人會移除你自己訊息上的連結預覽，並回覆翻譯後的推文連結。 |
 
 ### 自動功能
 
 1. **多平台網址轉換**：當有人發送支援平台的連結時，機器人會：
-   - 自動偵測來自 Twitter/X、Pixiv、Bilibili、PChome、Reddit、E-Hentai/ExHentai 和 Misskey 的網址
+   - 自動偵測來自 Twitter/X、Pixiv、Bilibili、PChome、Reddit、E-Hentai/ExHentai、Misskey、Facebook、TikTok、Instagram 和 Threads 的網址
    - 抑制 Discord 的原生嵌入以提供更佳呈現效果
    - 建立平台專屬格式的增強型嵌入訊息
+   - 在處理失敗時提供備用連結
+
+   各平台專屬行為：
    - **Twitter/X**：在多個嵌入區塊中顯示推文的多張圖片，透過 fixupx.com 連結處理影片，並具備 fixvx.com 自動備用機制
    - **Pixiv**：顯示作品預覽與作者資訊
    - **Bilibili**：提供影片/內容預覽
    - **PChome**：顯示商品資訊包含圖片、名稱、價格和特色標語
-   - 在處理失敗時提供備用連結
    - **Misskey**：顯示筆記內容與適當格式化，包含圖片和影片
+   - **Facebook**：轉換為 facebed.com 連結，並依頁面的 Open Graph 資料渲染隱藏網址的嵌入預覽
+   - **TikTok**：轉換為 tnktok.com 連結；能取得預覽資料時渲染隱藏網址的嵌入預覽，否則直接貼出連結讓 Discord 播放影片
+   - **Instagram**：轉換為 oginstagram.com 連結，當主網域無法連線時自動改用 zzinstagram.com，再依 Open Graph 資料渲染隱藏網址的嵌入預覽
+   - **Threads**：透過 FxThreads 取得貼文資料並渲染成嵌入訊息——單張圖片直接顯示，多張圖片則採用 Discord gallery。
 
 2. **Steam 特賣通知**：每日自動抓取最新的 Steam 遊戲特賣資訊，並發送通知到指定頻道。使用者也可以透過斜線指令手動查詢特賣資訊。
 
@@ -107,7 +142,7 @@ node index.js
 
 ### 模組化結構
 
-- `config.js` - 集中管理配置和環境��數
+- `config.js` - 集中管理配置和環境變數
 - `utils/metadata.js` - 處理圖片 metadata 解析
 - `utils/embedBuilder.js` - 建構 Discord embed 訊息
 - `commands/index.js` - 處理斜線指令邏輯
@@ -115,7 +150,7 @@ node index.js
 
 ### 新增網址轉換服務
 
-機器人現在支援模組化的網址轉換服務架構。要新增新的服務（Instagram、TikTok 等）：
+機器人現在支援模組化的網址轉換服務架構。要新增新的服務：
 
 1. 建立新的服務目錄：`services/[服務名稱]/`
 2. 按照 `services/twitter/twitterService.js` 的模式實作服務類別
@@ -131,12 +166,23 @@ node index.js
 
 ## 更新日誌 (Changelog)
 
+### 版本 1.7.0 (2026-09-14)
+
+*   **新增功能：** 新增 Facebook、TikTok、Instagram 和 Threads 網址轉換服務。
+*   **新增功能：** Facebook、TikTok、Instagram 連結會轉換為對應的修復網域（`facebed.com`、`tnktok.com`、`oginstagram.com`/`zzinstagram.com`），並依頁面的 Open Graph 資料渲染成隱藏網址的嵌入預覽；含影片的貼文仍會直接貼出連結，讓 Discord 播放影片。
+*   **新增功能：** Threads 連結透過 [FxThreads](https://github.com/AkitsukiNagi/FxThreads) 解析並渲染成灰色嵌入訊息——單張圖片直接顯示，多張圖片則採用 Discord gallery（最多 4 張，效果如同 X/Twitter 預覽）——含影片的貼文或 API 無法使用時則改用 fx.akitsuki.me 連結。
+*   **新增功能：** 新增 `/translate` 斜線指令。輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`hk`、`cn`、`en`、`jp`、`kr` 等），機器人會移除使用者自己訊息上的原生連結預覽，並回覆翻譯後的推文連結供 FxEmbed 產生嵌入訊息。
+*   **問題修復：** 當 fixupx 的動態預覽無法使用時，GIF 推文會改用 `fixvx.com`，而非一律使用 fixupx。機器人會先偵測 fixupx 提供給 Discord 的預覽，只有在該預覽已非動態時才切換網域。
+
 ### 版本 1.6.0 (2026-07-31)
 
 *   **變更：** Twitter/X 備用連結預設改為 `fixupx.com`，並以 `fixvx.com` 作為備用網域（取代 `fxtwitter.com`/`vxtwitter.com`）。
 *   **移除功能：** 移除自動判定頻道的圖片監聽功能（`/setimage` 指令及自動添加的 🔍/❤️ 反應）。圖片 metadata 查閱與收藏功能現在只能透過「檢查圖片資訊」與「收藏圖片」右鍵應用程式集指令手動觸發。
 *   **移除功能：** 移除 Civitai 和 PTT 網址轉換服務。
 *   **移除功能：** 移除 YouTube 頻道追蹤功能（`/youtube` 指令及相關監控）。
+
+<details>
+<summary>更早的版本</summary>
 
 ### 版本 1.5.5 (2026-06-15)
 
@@ -213,6 +259,8 @@ node index.js
 *   **功能強化：** 放大鏡反應（用於查看 metadata）在私訊中不再包含原始訊息連結。
 *   **優化：** 移除私訊中暫時性的「處理中」訊息（例如：「正在幫你提取圖片的資訊喔～請稍等一下！」），減少訊息量。
 *   **錯誤修正：** 啟用在單一訊息中處理多個圖片附件的功能，無論是放大鏡（metadata 提取）還是收藏功能，確保所有圖片都能被處理。
+
+</details>
 
 ## 授權
 

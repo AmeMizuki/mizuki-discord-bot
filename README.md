@@ -4,11 +4,23 @@
 
 # Akiyama Mizuki Discord Bot
 
-Pleaese join the Discord server if encounter problem： [Mizuki Bot](https://discord.gg/avMvrhdX3r)
+Add the bot to your server: [Install Mizuki Bot](https://discord.com/oauth2/authorize?client_id=1381902438168264734)
 
 A cute Discord bot specialized in extracting and displaying Stable Diffusion metadata information from images, with support for multi-platform URL conversion and embeds.
 
 ![image](https://github.com/user-attachments/assets/fbbe6a4a-2a9b-49ba-a1f9-36b992d0c039)
+
+## Table of Contents
+
+- [Features](#features)
+- [Supported Platforms](#supported-platforms)
+- [File Structure](#file-structure)
+- [Installation and Setup](#installation-and-setup)
+- [Usage](#usage)
+- [Supported Image Formats](#supported-image-formats)
+- [Development Notes](#development-notes)
+- [Changelog](#changelog)
+- [License](#license)
 
 ## Features
 
@@ -20,7 +32,8 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - 💰 **Steam Sale Notifications**: Automatically fetch and display Steam game sale information and push notifications to a designated channel.
 - 🎀 Cute response tone.
 
-## Supported Features
+## Supported Platforms
+
 - [x] Twitter/X
 - [x] Pixiv
 - [x] Bilibili
@@ -28,6 +41,10 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - [x] Reddit
 - [x] E-Hentai & ExHentai
 - [x] Misskey
+- [x] Facebook
+- [x] TikTok
+- [x] Instagram
+- [x] Threads
 
 ## File Structure
 
@@ -38,7 +55,8 @@ discordbot/
 ├── package.json                  # Dependency management
 ├── .env                          # Environment variables (needs to be created manually)
 ├── commands/
-│   └── index.js                  # Slash command handling
+│   ├── index.js                  # Slash command handling
+│   └── translateCommands.js      # /translate slash command (tweet translation links)
 ├── services/                     # URL conversion services
 │   ├── index.js                  # Service manager
 │   ├── twitter/
@@ -52,6 +70,14 @@ discordbot/
 │   │   └── pchomeService.js      # PChome 24h shopping URL processing
 │   ├── ehentai/
 │   │   └── ehentaiService.js     # E-Hentai & ExHentai URL processing
+│   ├── facebook/
+│   │   └── facebookService.js    # Facebook URL processing (facebed.com)
+│   ├── tiktok/
+│   │   └── tiktokService.js      # TikTok URL processing (tnktok.com)
+│   ├── instagram/
+│   │   └── instagramService.js   # Instagram URL processing (oginstagram.com/zzinstagram.com)
+│   ├── threads/
+│   │   └── threadsService.js     # Threads URL processing (FxThreads)
 │   └── README.md                 # Services documentation
 └── utils/
     ├── metadata.js               # Metadata parsing utilities
@@ -62,40 +88,49 @@ discordbot/
 ## Installation and Setup
 
 1. Install dependencies:
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 2. Create a `.env` file:
-```env
-BOT_TOKEN=YOUR_BOT_TOKEN
-CLIENT_ID=YOUR_BOT_CLIENT_ID
-```
+   ```env
+   BOT_TOKEN=YOUR_BOT_TOKEN
+   CLIENT_ID=YOUR_BOT_CLIENT_ID
+   ```
 
 3. Start the bot:
-```bash
-node index.js
-```
+   ```bash
+   node index.js
+   ```
 
 ## Usage
 
 ### Commands
 
-- Right-click a message → "檢查圖片資訊" (View Image Info) - Sends the image's metadata to you via private message. Manual trigger only.
-- Right-click a message → "收藏圖片" (Favorite Image) - Sends the image to you via private message in an aesthetically pleasing embed, along with a link to the original message. Manual trigger only.
+| Command | Description |
+| --- | --- |
+| Right-click a message → "檢查圖片資訊" (View Image Info) | Sends the image's metadata to you via private message. Manual trigger only. |
+| Right-click a message → "收藏圖片" (Favorite Image) | Sends the image to you via private message in an aesthetically pleasing embed, along with a link to the original message. Manual trigger only. |
+| `/translate` | Takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) plus a target language (`tw`, `cn`, `en`, `jp`, …). Removes the link preview from your own message and replies with the translated tweet link. |
 
 ### Automatic Features
 
 1. **Multi-Platform URL Conversion**: When someone posts links from supported platforms, the bot will:
-   - Automatically detect URLs from Twitter/X, Pixiv, Bilibili, PChome, Reddit, E-Hentai/ExHentai, and Misskey
+   - Automatically detect URLs from Twitter/X, Pixiv, Bilibili, PChome, Reddit, E-Hentai/ExHentai, Misskey, Facebook, TikTok, Instagram, and Threads
    - Suppress Discord's native embeds for better presentation
    - Create enhanced embeds with platform-specific formatting
+   - Provide fallback links if processing fails
+
+   Platform-specific behavior:
    - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fixupx.com links with automatic fixvx.com fallback
    - **Pixiv**: Show artwork previews with artist information
    - **Bilibili**: Provide video/content previews
    - **PChome**: Show product information including images, names, prices, and feature highlights
-   - Provide fallback links if processing fails
    - **Misskey**: Show note content with appropriate formatting, including images and videos
+   - **Facebook**: Convert links to facebed.com and render a hidden-link embed from the page's Open Graph data
+   - **TikTok**: Convert links to tnktok.com; a hidden-link embed is used when possible, otherwise the link is posted as-is so Discord can play the video
+   - **Instagram**: Convert links to oginstagram.com, falling back to zzinstagram.com when the primary domain is unreachable, then render a hidden-link embed from Open Graph data
+   - **Threads**: Fetch post data via FxThreads and render it as an embed — a single image renders directly.
 
 2. **Steam Sale Notifications**: Automatically fetch the latest Steam game sale information daily and send notifications to a designated channel. Users can also manually query for sale information using a slash command.
 
@@ -115,7 +150,7 @@ node index.js
 
 ### Adding New URL Conversion Services
 
-The bot now supports a modular architecture for URL conversion services. To add new services (Instagram, TikTok, etc.):
+The bot now supports a modular architecture for URL conversion services. To add a new service:
 
 1. Create a new service directory: `services/[service-name]/`
 2. Implement the service class following the pattern in `services/twitter/twitterService.js`
@@ -131,12 +166,26 @@ When adding new features, please follow modular principles:
 
 ## Changelog
 
+### Version 1.8.0 (2026-09-14)
+
+*   **New Feature:** Added Facebook, TikTok, Instagram, and Threads URL conversion services.
+*   **New Feature:** Facebook, TikTok, and Instagram links are converted to their fix-domain equivalent (`facebed.com`, `tnktok.com`, `oginstagram.com`/`zzinstagram.com`) and rendered as a hidden-link embed built from the page's Open Graph data; posts containing video still post the link directly so Discord can play it.
+*   **New Feature:** Threads links are resolved via [FxThreads](https://github.com/AkitsukiNagi/FxThreads) into a gray embed — a single image renders directly, multiple images use a Discord gallery (up to 4, mirroring the X/Twitter preview) — falling back to a `fx.akitsuki.me` link for video posts or when the API is unavailable.
+
+### Version 1.7.0 (2026-09-14)
+
+*   **New Feature:** Added the `/translate` slash command. It takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) and a target language (`tw`, `hk`, `cn`, `en`, `jp`, `kr`, …), suppresses the native link preview on the requester's own message, and replies with the translated tweet link for FxEmbed to render.
+*   **Fix:** GIF posts now fall back to `fixvx.com` when fixupx's animated preview is unavailable, instead of always using fixupx. The bot probes the preview fixupx hands to Discord and switches domains only when that preview is no longer animated.
+
 ### Version 1.6.0 (2026-07-31)
 
 *   **Change:** Twitter/X fallback links now default to `fixupx.com`, with `fixvx.com` as the backup domain (replacing `fxtwitter.com`/`vxtwitter.com`).
 *   **Removed:** Automatic channel-based image monitoring (the `/setimage` command and auto-added 🔍/❤️ reactions). Image metadata lookup and favoriting are now only available via the "檢查圖片資訊" and "收藏圖片" right-click context menu commands.
 *   **Removed:** Civitai and PTT URL conversion services.
 *   **Removed:** YouTube channel tracking (the `/youtube` command and related monitoring).
+
+<details>
+<summary>Older versions</summary>
 
 ### Version 1.5.5 (2026-06-15)
 
@@ -214,6 +263,8 @@ When adding new features, please follow modular principles:
 *   **Enhancement:** The magnifying glass reaction (for metadata) no longer includes the original message link in the private message.
 *   **Refinement:** Removed transient "processing" messages (e.g., "正在幫你提取圖片的資訊喔～請稍等一下！") in private DMs for both magnifying glass and favoriting features to reduce message clutter.
 *   **Bug Fix:** Enabled handling of multiple image attachments in a single message for both magnifying glass (metadata extraction) and favoriting features, ensuring all images are processed.
+
+</details>
 
 ## License
 

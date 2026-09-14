@@ -5,6 +5,10 @@ const PchomeService = require('./pchome/pchomeService');
 const RedditService = require('./reddit/redditService');
 const EhentaiService = require('./ehentai/ehentaiService');
 const MisskeyService = require('./misskey/misskeyService');
+const FacebookService = require('./facebook/facebookService');
+const TiktokService = require('./tiktok/tiktokService');
+const InstagramService = require('./instagram/instagramService');
+const ThreadsService = require('./threads/threadsService');
 const { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { URL } = require('url');
 
@@ -18,6 +22,10 @@ class UrlConversionService {
 			new RedditService(),
 			new EhentaiService(),
 			new MisskeyService(),
+			new FacebookService(),
+			new TiktokService(),
+			new InstagramService(),
+			new ThreadsService(),
 		];
 		this.deniedDomains = [
 			'exampledenied.com',
@@ -307,4 +315,8 @@ module.exports = {
 	RedditService,
 	EhentaiService,
 	MisskeyService,
+	FacebookService,
+	TiktokService,
+	InstagramService,
+	ThreadsService,
 };

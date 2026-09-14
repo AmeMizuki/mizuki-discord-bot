@@ -114,6 +114,10 @@ client.on('interactionCreate', async interaction => {
 		if (interaction.commandName === 'steam') {
 			await commandHandlers.handleSteamCommand(interaction);
 		}
+
+		if (interaction.commandName === 'translate') {
+			await commandHandlers.handleTranslateCommand(interaction);
+		}
 	}
 	else if (interaction.isContextMenuCommand()) {
 		if (interaction.commandName === '檢查圖片資訊') {

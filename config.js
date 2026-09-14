@@ -10,5 +10,6 @@ module.exports = {
 		SUCCESS: 0xDDAACC,
 		INFO: 0x0099FF,
 		ERROR: 0xFF0000,
+		GRAY: 0x99AAB5,
 	},
 };
