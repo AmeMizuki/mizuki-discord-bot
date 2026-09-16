@@ -22,7 +22,7 @@ class EhentaiService {
 				method: 'gdata',
 				gidlist: [[parseInt(galleryId), galleryToken]],
 				namespace: 1,
-			});
+			}, { timeout: 10000 });
 
 			if (!response.data.gmetadata || response.data.gmetadata.length === 0) {
 				return { type: 'error', content: 'Could not fetch gallery metadata.' };

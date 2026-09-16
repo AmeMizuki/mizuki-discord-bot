@@ -10,7 +10,7 @@ class PchomeService {
 
 	async processUrl(url) {
 		try {
-			const { data } = await axios.get(url);
+			const { data } = await axios.get(url, { timeout: 10000 });
 			const $ = cheerio.load(data);
 
 			const title = $('meta[property="og:title"]').attr('content') || $('h1#prod_name').text();

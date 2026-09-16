@@ -3,7 +3,7 @@ const { REST } = require('@discordjs/rest');
 
 // 導入配置和工具模組
 const { BOT_TOKEN, CLIENT_ID } = require('./config');
-const { UrlConversionService } = require('./services');
+const { urlConversionService } = require('./services');
 const { loadReactionRoles } = require('./utils/reactionRoleStorage');
 const { commands, ...commandHandlers } = require('./commands');
 const { loadSteamMonitoredChannels } = require('./utils/steamStorage');
@@ -55,13 +55,13 @@ async function checkSteamDeals() {
 			return;
 		}
 
-		const newDeals = await steamService.getNewDeals();
-		if (newDeals.length === 0) {
+		const deals = await steamService.fetchCurrentDeals();
+		if (deals.length === 0) {
 			return;
 		}
 
-		console.log(`Found ${newDeals.length} new Steam deals`);
-		const message = await steamService.createDealsMessage(newDeals);
+		console.log(`Broadcasting ${deals.length} current Steam deals`);
+		const message = await steamService.createDealsMessage(deals);
 
 		// Send to all monitored channels
 		for (const channelId of monitoredChannels) {
@@ -83,19 +83,18 @@ async function checkSteamDeals() {
 
 function startSteamMonitoring() {
 	const DAILY_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
+	const TARGET_HOUR_UTC = 4;
+
 	const now = new Date();
-	const targetHour = 5;
+	const nextCheck = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), TARGET_HOUR_UTC, 0, 0, 0));
 
-	let initialDelay = 0;
-	const nextCheck = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, 0, 0, 0);
-
-	if (now.getHours() >= targetHour) {
-		nextCheck.setDate(nextCheck.getDate() + 1);
+	if (nextCheck.getTime() <= now.getTime()) {
+		nextCheck.setUTCDate(nextCheck.getUTCDate() + 1);
 	}
 
-	initialDelay = nextCheck.getTime() - now.getTime();
+	const initialDelay = nextCheck.getTime() - now.getTime();
 
-	console.log(`Starting Steam deals monitoring. Next check scheduled for ${nextCheck.toLocaleString()}.`);
+	console.log(`Starting Steam deals monitoring. Next check scheduled for ${nextCheck.toISOString()} (12:00 Asia/Taipei).`);
 
 	setTimeout(() => {
 		checkSteamDeals();
@@ -131,6 +130,9 @@ client.on('interactionCreate', async interaction => {
 		}
 		else if (interaction.commandName === '移除機器人反應') {
 			await commandHandlers.handleRemoveBotReactionsCommand(interaction);
+		}
+		else if (interaction.commandName === '轉換為GIF') {
+			await commandHandlers.handleConvertToGifCommand(interaction);
 		}
 	}
 });
@@ -195,7 +197,6 @@ client.on('messageCreate', async message => {
 	if (message.author.bot) return;
 
 	// Handle URL conversions (Twitter, etc.)
-	const urlConversionService = new UrlConversionService();
 	const hasUrlsToProcess = urlConversionService.hasUrlsToProcess(message.content);
 	if (hasUrlsToProcess) {
 		try {
@@ -219,7 +220,6 @@ client.on('messageUpdate', async (oldMessage, newMessage) => {
 	if (newMessage.embeds.length === 0) return;
 	if ((newMessage.flags?.bitfield & 4) !== 0) return; // already SUPPRESS_EMBEDS
 
-	const urlConversionService = new UrlConversionService();
 	if (!urlConversionService.hasUrlsToProcess(newMessage.content)) return;
 
 	try {

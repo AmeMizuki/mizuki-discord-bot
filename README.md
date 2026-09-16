@@ -30,6 +30,7 @@ A cute Discord bot specialized in extracting and displaying Stable Diffusion met
 - 🔗 **Multi-Platform URL Conversion**: Automatically converts links from various platforms to enhanced embeds.
 - 🖼️ **Multi-Image Support**: Displays multiple images from supported platforms in a single message using multiple embeds.
 - 💰 **Steam Sale Notifications**: Automatically fetch and display Steam game sale information and push notifications to a designated channel.
+- 🎬 **Video-to-GIF conversion**: Convert a video in a message to a GIF via a right-click context menu command ("轉換為GIF").
 - 🎀 Cute response tone.
 
 ## Supported Platforms
@@ -56,9 +57,12 @@ discordbot/
 ├── .env                          # Environment variables (needs to be created manually)
 ├── commands/
 │   ├── index.js                  # Slash command handling
-│   └── translateCommands.js      # /translate slash command (tweet translation links)
+│   ├── translateCommands.js      # /translate slash command (tweet translation links)
+│   └── gifCommands.js            # "轉換為GIF" context menu command
 ├── services/                     # URL conversion services
 │   ├── index.js                  # Service manager
+│   ├── gif/
+│   │   └── gifService.js         # Video-to-GIF conversion via ezgif.com
 │   ├── twitter/
 │   │   ├── twitterService.js     # Twitter/X URL processing
 │   │   └── twitterUtils.js       # Twitter utility functions
@@ -111,6 +115,7 @@ discordbot/
 | --- | --- |
 | Right-click a message → "檢查圖片資訊" (View Image Info) | Sends the image's metadata to you via private message. Manual trigger only. |
 | Right-click a message → "收藏圖片" (Favorite Image) | Sends the image to you via private message in an aesthetically pleasing embed, along with a link to the original message. Manual trigger only. |
+| Right-click a message → "轉換為GIF" (Convert to GIF) | Converts the video in the message to a GIF and posts it to the channel. |
 | `/translate` | Takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) plus a target language (`tw`, `cn`, `en`, `jp`, …). Removes the link preview from your own message and replies with the translated tweet link. |
 
 ### Automatic Features

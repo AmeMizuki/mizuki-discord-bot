@@ -30,6 +30,7 @@
 - 🔗 **多平台網址轉換**：自動轉換各種平台連結為增強型嵌入訊息。
 - 🖼️ **多圖片支援**：在單一訊息中使用多個嵌入區塊顯示支援平台的多張圖片。
 - 💰 **Steam 特賣通知**：自動抓取並顯示 Steam 遊戲特賣資訊，並推播通知到指定頻道。
+- 🎬 **影片轉 GIF**：透過右鍵應用程式集指令（「轉換為GIF」）將訊息中的影片轉換成 GIF。
 - 🎀 可愛的回應語氣
 
 ## 支援平台
@@ -56,9 +57,12 @@ discordbot/
 ├── .env                          # 環境變數（需自行創建）
 ├── commands/
 │   ├── index.js                  # 斜線指令處理
-│   └── translateCommands.js      # /translate 斜線指令（推文翻譯連結）
+│   ├── translateCommands.js      # /translate 斜線指令（推文翻譯連結）
+│   └── gifCommands.js            # 「轉換為GIF」右鍵應用程式集指令
 ├── services/                     # 網址轉換服務
 │   ├── index.js                  # 服務管理器
+│   ├── gif/
+│   │   └── gifService.js         # 透過 ezgif.com 將影片轉換成 GIF
 │   ├── twitter/
 │   │   ├── twitterService.js     # Twitter/X 網址處理
 │   │   └── twitterUtils.js       # Twitter 工具函式
@@ -111,6 +115,7 @@ discordbot/
 | --- | --- |
 | 右鍵訊息 → 「檢查圖片資訊」 | 將圖片的 metadata 透過私訊傳送給你。僅能手動觸發。 |
 | 右鍵訊息 → 「收藏圖片」 | 將圖片以美觀的嵌入式訊息透過私訊傳送給你，並附上原始訊息連結。僅能手動觸發。 |
+| 右鍵訊息 → 「轉換為GIF」 | 將訊息中的影片轉換成 GIF 並發布到頻道。 |
 | `/translate` | 輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`cn`、`en`、`jp` 等），機器人會移除你自己訊息上的連結預覽，並回覆翻譯後的推文連結。 |
 
 ### 自動功能

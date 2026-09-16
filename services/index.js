@@ -308,6 +308,7 @@ class UrlConversionService {
 
 module.exports = {
 	UrlConversionService,
+	urlConversionService: new UrlConversionService(),
 	TwitterService,
 	PixivService,
 	BilibiliService,

@@ -1,4 +1,5 @@
 const { ApplicationCommandType, ContextMenuCommandBuilder, ChannelType } = require('discord.js');
+const { urlConversionService } = require('../services');
 
 // Message management commands
 const messageCommands = [
@@ -39,9 +40,7 @@ async function handleDeleteMessageCommand(interaction) {
 	// Allow if user is admin or if user was the original requester of the URL conversion
 	const isAdmin = interaction.member ? interaction.member.permissions.has('Administrator') : false;
 
-	// Use the UrlConversionService to check if user can delete
-	const { UrlConversionService } = require('../services');
-	const urlConversionService = new UrlConversionService();
+	// Use the shared UrlConversionService instance to check if user can delete
 	const canDeleteViaService = urlConversionService.canUserDeleteMessage(message.id, interaction.user.id);
 
 	// Fallback to the old method if service doesn't have the relation

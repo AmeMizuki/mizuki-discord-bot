@@ -30,7 +30,7 @@ function detectMetadataType(jsonObj) {
 
 async function getMetadata(imageUrl, contentType) {
 	try {
-		const response = await fetch(imageUrl);
+		const response = await fetch(imageUrl, { timeout: 10000 });
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
