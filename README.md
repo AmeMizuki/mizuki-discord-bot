@@ -171,6 +171,13 @@ When adding new features, please follow modular principles:
 
 ## Changelog
 
+### Version 1.9.0 (2026-09-16)
+
+*   **New Feature:** Added a "轉換為GIF" message context menu command that converts the video in a message (an attachment, or a video embed unfurled from a link) into a GIF and posts it to the channel. Only one conversion runs at a time; others queue. If the resulting GIF is too large to upload, the requester is told it failed instead of getting a fallback link.
+*   **Fix:** Steam sale broadcasts now post the current deal list on a fixed daily schedule (12:00 Asia/Taipei), replacing the previous diff-only check that silently skipped a day's broadcast whenever the process restarted.
+*   **Fix:** `UrlConversionService` was being reconstructed on every single message, recompiling all 11 platform services' URL patterns each time; it's now a shared singleton. This also fixes the delete-message permission check, which always failed silently because each check ran against a fresh, empty instance and fell back to an extra Discord API call.
+*   **Enhancement:** Added missing request timeouts for Pixiv, E-Hentai, PChome, and image metadata fetches so a stalled upstream can't hang a connection indefinitely.
+
 ### Version 1.8.0 (2026-09-14)
 
 *   **New Feature:** Added Facebook, TikTok, Instagram, and Threads URL conversion services.
