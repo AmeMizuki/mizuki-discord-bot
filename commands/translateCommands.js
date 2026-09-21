@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { parseTweetUrl, buildTranslatedTweetUrl } = require('../services/twitter/twitterUtils');
+const { parseTweetUrl, buildTranslatedTweetUrl, fetchTranslatedTweet, isFixupxVideoPreviewAvailable } = require('../services/twitter/twitterUtils');
+const { createTweetEmbed } = require('../utils/embedBuilder');
 
 // Codes accepted by FxEmbed/FixupX (tw/cn/hk/jp/kr are their region aliases)
 const TRANSLATION_LANGUAGES = [
@@ -76,9 +77,30 @@ async function handleTranslateCommand(interaction) {
 	}
 
 	await interaction.deferReply();
-
 	await suppressOriginalEmbeds(interaction, tweet.tweetId);
-	await interaction.editReply(buildTranslatedTweetUrl(tweet, language));
+
+	const translatedTweet = await fetchTranslatedTweet(tweet.tweetId, language);
+	const translatedText = translatedTweet?.translation?.text;
+	// Videos fall back to the raw link so Discord's native unfurl can still play them.
+	const hasVideo = translatedTweet?.media?.videos?.length > 0;
+
+	if (!translatedText || hasVideo) {
+		let replyUrl = buildTranslatedTweetUrl(tweet, language);
+		if (hasVideo && !(await isFixupxVideoPreviewAvailable(replyUrl))) {
+			replyUrl = replyUrl.replace('fixupx.com', 'fixvx.com');
+		}
+		await interaction.editReply(replyUrl);
+		return;
+	}
+
+	const photoUrls = translatedTweet.media?.photos?.map(photo => photo.url) || [];
+	const embeds = await createTweetEmbed(
+		{ ...translatedTweet, text: translatedText.substring(0, 4000) },
+		translatedTweet.url,
+		photoUrls,
+	);
+
+	await interaction.editReply({ embeds });
 }
 
 module.exports = {

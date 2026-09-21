@@ -171,6 +171,10 @@ When adding new features, please follow modular principles:
 
 ## Changelog
 
+### Version 1.9.1 (2026-09-21)
+
+*   **Fix:** Twitter/X video links (not just GIFs) now fall back to `fixvx.com` when fixupx fails to render the video (empty embed or "post unavailable"), by probing the fixupx page for an `og:video` tag before using it. Applies to both automatic message embeds and the `/translate` command's video replies.
+
 ### Version 1.9.0 (2026-09-16)
 
 *   **New Feature:** Added a "轉換為GIF" message context menu command that converts the video in a message (an attachment, or a video embed unfurled from a link) into a GIF and posts it to the channel. Only one conversion runs at a time; others queue. If the resulting GIF is too large to upload, the requester is told it failed instead of getting a fallback link.

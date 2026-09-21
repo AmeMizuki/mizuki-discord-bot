@@ -105,6 +105,15 @@ function startSteamMonitoring() {
 }
 
 client.on('interactionCreate', async interaction => {
+	try {
+		await handleInteraction(interaction);
+	}
+	catch (error) {
+		console.error(`Unhandled error in interactionCreate (${interaction.commandName}):`, error);
+	}
+});
+
+async function handleInteraction(interaction) {
 	if (interaction.isChatInputCommand()) {
 		if (interaction.commandName === 'reactmessage') {
 			await commandHandlers.handleReactMessageCommand(interaction);
@@ -135,7 +144,7 @@ client.on('interactionCreate', async interaction => {
 			await commandHandlers.handleConvertToGifCommand(interaction);
 		}
 	}
-});
+}
 
 client.on('messageReactionAdd', async (reaction, user) => {
 	if (user.bot) return;

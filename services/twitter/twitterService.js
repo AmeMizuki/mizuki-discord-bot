@@ -1,4 +1,4 @@
-const { getTweetIdFromUrl, parseTweetUrl, fetchTweetData } = require('./twitterUtils');
+const { getTweetIdFromUrl, parseTweetUrl, fetchTweetData, isFixupxVideoPreviewAvailable } = require('./twitterUtils');
 const { createTweetEmbed } = require('../../utils/embedBuilder');
 
 class TwitterService {
@@ -36,15 +36,18 @@ class TwitterService {
 			};
 		}
 
-		// Videos and animated GIFs fall back to a link so Discord can play them.
-		// fixupx normally serves GIFs fine; when its animated preview is unavailable
-		// (still/broken WebP), fixvx is used as the substitute instead.
+		// Videos and animated GIFs fall back 
 		if (tweetData.media && tweetData.media.videos && tweetData.media.videos.length > 0) {
 			const isGif = tweetData.media.videos.some(video => video.type === 'gif');
 
 			let fallbackSource = source;
-			if (isGif && source !== 'vxtwitter' && !(await this.hasAnimatedPreviewOnFixupx(url))) {
-				fallbackSource = 'vxtwitter';
+			if (source !== 'vxtwitter') {
+				const previewOk = isGif
+					? await this.hasAnimatedPreviewOnFixupx(url)
+					: await this.hasVideoPreviewOnFixupx(url);
+				if (!previewOk) {
+					fallbackSource = 'vxtwitter';
+				}
 			}
 
 			return {
@@ -79,9 +82,7 @@ class TwitterService {
 		return `\n${convertedLink}${reasonText}`;
 	}
 
-	// fixupx hands Discord an animated WebP for GIF posts, chosen from the request's
-	// user agent. When that preview is unavailable it degrades to a still image and
-	// the embed loses its animation; fixvx is then used instead.
+	// fixupx hands Discord an animated WebP for GIF posts
 	async hasAnimatedPreviewOnFixupx(originalUrl) {
 		const tweet = parseTweetUrl(originalUrl);
 		if (!tweet) {
@@ -116,6 +117,16 @@ class TwitterService {
 			console.warn(`Fixupx animated preview probe failed, falling back to vxtwitter: ${error.message}`);
 			return false;
 		}
+	}
+
+	async hasVideoPreviewOnFixupx(originalUrl) {
+		const tweet = parseTweetUrl(originalUrl);
+		if (!tweet) {
+			return false;
+		}
+
+		const previewUrl = `https://fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}`;
+		return isFixupxVideoPreviewAvailable(previewUrl);
 	}
 
 	// A WebP is only animated when it carries an ANIM chunk; a still WebP means
