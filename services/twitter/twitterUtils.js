@@ -81,28 +81,6 @@ function convertVxTwitterMedia(mediaExtended) {
 	return Object.keys(media).length > 0 ? media : null;
 }
 
-async function isFixupxVideoPreviewAvailable(fixupxUrl) {
-	const { default: fetch } = await import('node-fetch');
-
-	try {
-		const response = await fetch(fixupxUrl, {
-			timeout: 5000,
-			headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)' },
-		});
-
-		if (!response.ok) {
-			return false;
-		}
-
-		const html = await response.text();
-		return html.includes('og:video');
-	}
-	catch (error) {
-		console.warn(`Fixupx video preview probe failed for ${fixupxUrl}: ${error.message}`);
-		return false;
-	}
-}
-
 async function fetchTranslatedTweet(tweetId, language) {
 	const { default: fetch } = await import('node-fetch');
 
@@ -192,5 +170,4 @@ module.exports = {
 	fetchTweetData,
 	fetchTranslatedTweet,
 	convertVxTwitterData,
-	isFixupxVideoPreviewAvailable,
 };

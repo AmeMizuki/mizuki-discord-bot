@@ -127,7 +127,7 @@ discordbot/
    - Provide fallback links if processing fails
 
    Platform-specific behavior:
-   - **Twitter/X**: Display multiple images from tweets in separate embeds, handle videos via fixupx.com links with automatic fixvx.com fallback
+   - **Twitter/X**: Display multiple images from tweets in separate embeds, render GIFs as animated embeds, and link videos to their original `video.twimg.com` file followed by a text embed
    - **Pixiv**: Show artwork previews with artist information
    - **Bilibili**: Provide video/content previews
    - **PChome**: Show product information including images, names, prices, and feature highlights
@@ -170,6 +170,11 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 1.9.2 (2026-09-23)
+
+*   **Change:** Twitter/X GIF posts now render as a regular tweet embed with fixupx's animated WebP as the image, instead of posting a raw `fixupx.com`/`fixvx.com` link.
+*   **Change:** Twitter/X video posts now link the original `video.twimg.com` file as `[Preview](…)` in its own message (so Discord's unfurl can play it), followed by the tweet's text embed. Applies to automatic message embeds and `/translate`, so videos no longer depend on fixupx/fixvx rendering; the 1.9.1 `og:video` probe and fixvx video fallback were removed.
 
 ### Version 1.9.1 (2026-09-21)
 

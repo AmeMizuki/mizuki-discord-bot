@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { parseTweetUrl, buildTranslatedTweetUrl, fetchTranslatedTweet, isFixupxVideoPreviewAvailable } = require('../services/twitter/twitterUtils');
+const { parseTweetUrl, buildTranslatedTweetUrl, fetchTranslatedTweet } = require('../services/twitter/twitterUtils');
 const { createTweetEmbed } = require('../utils/embedBuilder');
 
 // Codes accepted by FxEmbed/FixupX (tw/cn/hk/jp/kr are their region aliases)
@@ -81,15 +81,9 @@ async function handleTranslateCommand(interaction) {
 
 	const translatedTweet = await fetchTranslatedTweet(tweet.tweetId, language);
 	const translatedText = translatedTweet?.translation?.text;
-	// Videos fall back to the raw link so Discord's native unfurl can still play them.
-	const hasVideo = translatedTweet?.media?.videos?.length > 0;
 
-	if (!translatedText || hasVideo) {
-		let replyUrl = buildTranslatedTweetUrl(tweet, language);
-		if (hasVideo && !(await isFixupxVideoPreviewAvailable(replyUrl))) {
-			replyUrl = replyUrl.replace('fixupx.com', 'fixvx.com');
-		}
-		await interaction.editReply(replyUrl);
+	if (!translatedText) {
+		await interaction.editReply(buildTranslatedTweetUrl(tweet, language));
 		return;
 	}
 
@@ -99,6 +93,14 @@ async function handleTranslateCommand(interaction) {
 		translatedTweet.url,
 		photoUrls,
 	);
+
+	// Discord skips link unfurls on messages that carry bot embeds, so the raw video link gets its own message
+	const videoLinks = (translatedTweet.media?.videos || []).filter(video => video.url).map(video => `[Preview](${video.url})`);
+	if (videoLinks.length > 0) {
+		await interaction.editReply(videoLinks.join('\n'));
+		await interaction.followUp({ embeds });
+		return;
+	}
 
 	await interaction.editReply({ embeds });
 }

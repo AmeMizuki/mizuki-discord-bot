@@ -1,4 +1,4 @@
-const { getTweetIdFromUrl, parseTweetUrl, fetchTweetData, isFixupxVideoPreviewAvailable } = require('./twitterUtils');
+const { getTweetIdFromUrl, parseTweetUrl, fetchTweetData } = require('./twitterUtils');
 const { createTweetEmbed } = require('../../utils/embedBuilder');
 
 class TwitterService {
@@ -36,23 +36,24 @@ class TwitterService {
 			};
 		}
 
-		// Videos and animated GIFs fall back 
+		// GIFs embed fixupx's animated WebP; videos (or a failed GIF probe) link the raw video.twimg.com file above a text embed
 		if (tweetData.media && tweetData.media.videos && tweetData.media.videos.length > 0) {
-			const isGif = tweetData.media.videos.some(video => video.type === 'gif');
+			const isGif = tweetData.media.videos.every(video => video.type === 'gif');
 
-			let fallbackSource = source;
-			if (source !== 'vxtwitter') {
-				const previewOk = isGif
-					? await this.hasAnimatedPreviewOnFixupx(url)
-					: await this.hasVideoPreviewOnFixupx(url);
-				if (!previewOk) {
-					fallbackSource = 'vxtwitter';
+			if (isGif) {
+				const gifUrl = await this.getAnimatedPreviewUrl(url);
+				if (gifUrl) {
+					return {
+						type: 'embeds',
+						content: await createTweetEmbed(tweetData, url, [gifUrl]),
+					};
 				}
 			}
 
 			return {
-				type: 'fallback',
-				content: this.createFallbackLink(url, '', fallbackSource),
+				type: 'embeds',
+				text: tweetData.media.videos.filter(video => video.url).map(video => `[Preview](${video.url})`).join('\n'),
+				content: await createTweetEmbed(tweetData, url),
 			};
 		}
 
@@ -82,11 +83,11 @@ class TwitterService {
 		return `\n${convertedLink}${reasonText}`;
 	}
 
-	// fixupx hands Discord an animated WebP for GIF posts
-	async hasAnimatedPreviewOnFixupx(originalUrl) {
+	// fixupx serves an animated WebP for GIF posts; returns its final URL or null
+	async getAnimatedPreviewUrl(originalUrl) {
 		const tweet = parseTweetUrl(originalUrl);
 		if (!tweet) {
-			return false;
+			return null;
 		}
 
 		const previewUrl = `https://d.fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}`;
@@ -102,31 +103,21 @@ class TwitterService {
 			});
 
 			if (!response.ok) {
-				return false;
+				return null;
 			}
 
 			const contentType = response.headers.get('content-type') || '';
 			if (!contentType.includes('webp')) {
-				return false;
+				return null;
 			}
 
 			const header = Buffer.from(await response.arrayBuffer());
-			return TwitterService.isAnimatedWebp(header);
+			return TwitterService.isAnimatedWebp(header) ? response.url : null;
 		}
 		catch (error) {
 			console.warn(`Fixupx animated preview probe failed, falling back to vxtwitter: ${error.message}`);
-			return false;
+			return null;
 		}
-	}
-
-	async hasVideoPreviewOnFixupx(originalUrl) {
-		const tweet = parseTweetUrl(originalUrl);
-		if (!tweet) {
-			return false;
-		}
-
-		const previewUrl = `https://fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}`;
-		return isFixupxVideoPreviewAvailable(previewUrl);
 	}
 
 	// A WebP is only animated when it carries an ANIM chunk; a still WebP means

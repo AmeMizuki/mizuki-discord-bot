@@ -117,6 +117,13 @@ class UrlConversionService {
 						}
 					}
 					else {
+						// Discord skips link unfurls on messages that carry bot embeds, so the text goes out alone first
+						if (result.text) {
+							const textMessage = await channel.send(result.text);
+							if (originalMessage) {
+								this.storeMessageRelation(textMessage.id, originalMessage.author.id, originalMessage.id);
+							}
+						}
 						sentMessage = await channel.send({ embeds: result.content });
 					}
 					break;
