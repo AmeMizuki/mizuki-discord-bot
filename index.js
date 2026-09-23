@@ -126,6 +126,10 @@ async function handleInteraction(interaction) {
 		if (interaction.commandName === 'translate') {
 			await commandHandlers.handleTranslateCommand(interaction);
 		}
+
+		if (interaction.commandName === 'ai-ranking') {
+			await commandHandlers.handleAiRankingCommand(interaction);
+		}
 	}
 	else if (interaction.isContextMenuCommand()) {
 		if (interaction.commandName === '檢查圖片資訊') {

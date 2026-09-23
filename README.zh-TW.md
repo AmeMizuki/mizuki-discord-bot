@@ -58,6 +58,7 @@ discordbot/
 ├── commands/
 │   ├── index.js                  # 斜線指令處理
 │   ├── translateCommands.js      # /translate 斜線指令（推文翻譯連結）
+│   ├── aiRankingCommands.js      # /ai-ranking 斜線指令（Artificial Analysis 排行榜）
 │   └── gifCommands.js            # 「轉換為GIF」右鍵應用程式集指令
 ├── services/                     # 網址轉換服務
 │   ├── index.js                  # 服務管理器
@@ -82,6 +83,8 @@ discordbot/
 │   │   └── instagramService.js   # Instagram 網址處理（oginstagram.com/zzinstagram.com）
 │   ├── threads/
 │   │   └── threadsService.js     # Threads 網址處理（FxThreads）
+│   ├── artificialAnalysis/
+│   │   └── artificialAnalysisService.js # Artificial Analysis 排行榜 API 與快取
 │   └── README.md                 # 服務架構說明文件
 └── utils/
     ├── metadata.js               # Metadata 解析工具
@@ -100,6 +103,7 @@ discordbot/
    ```env
    BOT_TOKEN=你的機器人TOKEN
    CLIENT_ID=你的機器人CLIENT_ID
+   AA_BENCHMARK_API=你的Artificial Analysis API金鑰
    ```
 
 3. 啟動機器人：
@@ -117,6 +121,7 @@ discordbot/
 | 右鍵訊息 → 「收藏圖片」 | 將圖片以美觀的嵌入式訊息透過私訊傳送給你，並附上原始訊息連結。僅能手動觸發。 |
 | 右鍵訊息 → 「轉換為GIF」 | 將訊息中的影片轉換成 GIF 並發布到頻道。 |
 | `/translate` | 輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`cn`、`en`、`jp` 等），機器人會移除你自己訊息上的連結預覽，並回覆翻譯後的推文連結。 |
+| `/ai-ranking` | 顯示 [Artificial Analysis](https://artificialanalysis.ai/) 的 AI 模型 Top 10，可依 `intelligence`、`coding`、`math` 或 `speed` 排序，並附上長條圖。同一模型只列出最高思考等級的版本。 |
 
 ### 自動功能
 
@@ -170,6 +175,10 @@ discordbot/
 3. 使用 `module.exports` 導出需要的函式
 
 ## 更新日誌 (Changelog)
+
+### 版本 1.9.0 (2026-09-23)
+
+*   **新增功能：** 新增 `/ai-ranking` 指令，顯示 Artificial Analysis 的 AI 模型排行榜與長條圖。
 
 ### 版本 1.8.2 (2026-09-23)
 

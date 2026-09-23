@@ -5,6 +5,7 @@ const { messageCommands, handleDeleteMessageCommand, handleRemoveBotReactionsCom
 const { steamCommands, handleSteamCommand } = require('./steamCommands');
 const { translateCommands, handleTranslateCommand } = require('./translateCommands');
 const { gifCommands, handleConvertToGifCommand } = require('./gifCommands');
+const { aiRankingCommands, handleAiRankingCommand } = require('./aiRankingCommands');
 
 // Combine all commands
 const commands = [
@@ -14,6 +15,7 @@ const commands = [
 	...steamCommands,
 	...translateCommands,
 	...gifCommands,
+	...aiRankingCommands,
 ].map(command => command.toJSON());
 
 module.exports = {
@@ -26,4 +28,5 @@ module.exports = {
 	handleSteamCommand,
 	handleTranslateCommand,
 	handleConvertToGifCommand,
+	handleAiRankingCommand,
 };

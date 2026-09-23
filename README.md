@@ -58,6 +58,7 @@ discordbot/
 ├── commands/
 │   ├── index.js                  # Slash command handling
 │   ├── translateCommands.js      # /translate slash command (tweet translation links)
+│   ├── aiRankingCommands.js      # /ai-ranking slash command (Artificial Analysis leaderboard)
 │   └── gifCommands.js            # "轉換為GIF" context menu command
 ├── services/                     # URL conversion services
 │   ├── index.js                  # Service manager
@@ -82,6 +83,8 @@ discordbot/
 │   │   └── instagramService.js   # Instagram URL processing (oginstagram.com/zzinstagram.com)
 │   ├── threads/
 │   │   └── threadsService.js     # Threads URL processing (FxThreads)
+│   ├── artificialAnalysis/
+│   │   └── artificialAnalysisService.js # Artificial Analysis leaderboard API + cache
 │   └── README.md                 # Services documentation
 └── utils/
     ├── metadata.js               # Metadata parsing utilities
@@ -100,6 +103,7 @@ discordbot/
    ```env
    BOT_TOKEN=YOUR_BOT_TOKEN
    CLIENT_ID=YOUR_BOT_CLIENT_ID
+   AA_BENCHMARK_API=YOUR_ARTIFICIAL_ANALYSIS_API_KEY
    ```
 
 3. Start the bot:
@@ -117,6 +121,7 @@ discordbot/
 | Right-click a message → "收藏圖片" (Favorite Image) | Sends the image to you via private message in an aesthetically pleasing embed, along with a link to the original message. Manual trigger only. |
 | Right-click a message → "轉換為GIF" (Convert to GIF) | Converts the video in the message to a GIF and posts it to the channel. |
 | `/translate` | Takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) plus a target language (`tw`, `cn`, `en`, `jp`, …). Removes the link preview from your own message and replies with the translated tweet link. |
+| `/ai-ranking` | Shows the Top 10 AI models from [Artificial Analysis](https://artificialanalysis.ai/) by `intelligence`, `coding`, `math`, or `speed`, with a bar chart. Each model is listed once, at its highest reasoning effort. |
 
 ### Automatic Features
 
@@ -170,6 +175,10 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Version 1.10.0 (2026-09-23)
+
+*   **New Feature:** Added `/ai-ranking` to show the Artificial Analysis AI model leaderboard with a bar chart.
 
 ### Version 1.9.2 (2026-09-23)
 
