@@ -21,11 +21,6 @@ const steamCommands = [
 			subcommand
 				.setName('test')
 				.setDescription('測試 Steam 特賣追蹤功能，顯示當前特賣'),
-		)
-		.addSubcommand(subcommand =>
-			subcommand
-				.setName('clear')
-				.setDescription('清除所有 Steam 特賣追蹤頻道'),
 		),
 ];
 
@@ -66,11 +61,6 @@ async function handleSteamCommand(interaction) {
 		else {
 			responseMessage = '⚠️ 此頻道未在追蹤 Steam 特賣。';
 		}
-		break;
-	}
-	case 'clear': {
-		saveSteamMonitoredChannels([]);
-		responseMessage = '✅ 清除所有 Steam 特賣追蹤頻道。';
 		break;
 	}
 	case 'test': {
