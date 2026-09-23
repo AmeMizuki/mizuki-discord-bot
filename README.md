@@ -175,6 +175,7 @@ When adding new features, please follow modular principles:
 
 *   **Change:** Twitter/X GIF posts now show as an animated embed instead of a link.
 *   **Change:** Twitter/X video posts (including `/translate`) now post a video preview link followed by the tweet embed, replacing the fixvx fallback.
+*   **New Feature:** fixupx/fixvx links with a language suffix (e.g. `/status/123/tw`) now show the full translation in an embed.
 
 ### Version 1.9.1 (2026-09-21)
 

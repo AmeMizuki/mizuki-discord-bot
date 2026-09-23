@@ -1,3 +1,5 @@
+const { createTweetEmbed } = require('../../utils/embedBuilder');
+
 // Matches twitter.com/x.com and their FxEmbed mirrors, with or without a handle
 // (`/user/status/1`, `/i/web/status/1`, `/status/1`, `/user/status/1/ja`).
 const TWEET_URL_REGEX = /(?:twitter\.com|x\.com|fxtwitter\.com|vxtwitter\.com|fixupx\.com|fixvx\.com|twittpr\.com)((?:\/[^/?#]+)*)\/(?:status|statuses)\/(\d+)/i;
@@ -99,6 +101,26 @@ async function fetchTranslatedTweet(tweetId, language) {
 	}
 }
 
+// Returns { text, embeds } with the full translation, or null when FxEmbed has no translation.
+// Video links go in `text` because Discord only unfurls them in a message without bot embeds.
+async function buildTranslatedTweetMessage(tweetId, language) {
+	const translatedTweet = await fetchTranslatedTweet(tweetId, language);
+	const translatedText = translatedTweet?.translation?.text;
+	if (!translatedText) {
+		return null;
+	}
+
+	const photoUrls = translatedTweet.media?.photos?.map(photo => photo.url) || [];
+	const embeds = await createTweetEmbed(
+		{ ...translatedTweet, text: translatedText.substring(0, 4000) },
+		translatedTweet.url,
+		photoUrls,
+	);
+	const videoLinks = (translatedTweet.media?.videos || []).filter(video => video.url).map(video => `[Preview](${video.url})`);
+
+	return { text: videoLinks.join('\n') || undefined, embeds };
+}
+
 async function fetchTweetData(tweetId) {
 	const { default: fetch } = await import('node-fetch');
 
@@ -168,6 +190,6 @@ module.exports = {
 	parseTweetUrl,
 	buildTranslatedTweetUrl,
 	fetchTweetData,
-	fetchTranslatedTweet,
+	buildTranslatedTweetMessage,
 	convertVxTwitterData,
 };

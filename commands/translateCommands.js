@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { parseTweetUrl, buildTranslatedTweetUrl, fetchTranslatedTweet } = require('../services/twitter/twitterUtils');
-const { createTweetEmbed } = require('../utils/embedBuilder');
+const { parseTweetUrl, buildTranslatedTweetUrl, buildTranslatedTweetMessage } = require('../services/twitter/twitterUtils');
 
 // Codes accepted by FxEmbed/FixupX (tw/cn/hk/jp/kr are their region aliases)
 const TRANSLATION_LANGUAGES = [
@@ -79,30 +78,19 @@ async function handleTranslateCommand(interaction) {
 	await interaction.deferReply();
 	await suppressOriginalEmbeds(interaction, tweet.tweetId);
 
-	const translatedTweet = await fetchTranslatedTweet(tweet.tweetId, language);
-	const translatedText = translatedTweet?.translation?.text;
-
-	if (!translatedText) {
+	const translated = await buildTranslatedTweetMessage(tweet.tweetId, language);
+	if (!translated) {
 		await interaction.editReply(buildTranslatedTweetUrl(tweet, language));
 		return;
 	}
 
-	const photoUrls = translatedTweet.media?.photos?.map(photo => photo.url) || [];
-	const embeds = await createTweetEmbed(
-		{ ...translatedTweet, text: translatedText.substring(0, 4000) },
-		translatedTweet.url,
-		photoUrls,
-	);
-
-	// Discord skips link unfurls on messages that carry bot embeds, so the raw video link gets its own message
-	const videoLinks = (translatedTweet.media?.videos || []).filter(video => video.url).map(video => `[Preview](${video.url})`);
-	if (videoLinks.length > 0) {
-		await interaction.editReply(videoLinks.join('\n'));
-		await interaction.followUp({ embeds });
+	if (translated.text) {
+		await interaction.editReply(translated.text);
+		await interaction.followUp({ embeds: translated.embeds });
 		return;
 	}
 
-	await interaction.editReply({ embeds });
+	await interaction.editReply({ embeds: translated.embeds });
 }
 
 module.exports = {
