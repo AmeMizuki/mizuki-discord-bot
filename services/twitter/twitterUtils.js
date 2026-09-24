@@ -112,7 +112,7 @@ async function buildTranslatedTweetMessage(tweetId, language) {
 
 	const photoUrls = translatedTweet.media?.photos?.map(photo => photo.url) || [];
 	const embeds = await createTweetEmbed(
-		{ ...translatedTweet, text: translatedText.substring(0, 4000) },
+		{ ...translatedTweet, text: translatedText },
 		translatedTweet.url,
 		photoUrls,
 	);

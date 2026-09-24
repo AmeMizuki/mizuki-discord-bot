@@ -145,7 +145,7 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 			.setTimestamp(new Date(tweetData.created_timestamp * 1000));
 
 		if (tweetData.text) {
-			embed.setDescription(tweetData.text);
+			embed.setDescription(tweetData.text.substring(0, 4000));
 		}
 
 		if (tweetData.likes !== undefined) {
@@ -171,7 +171,7 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 	}
 	else {
 		// Create one embed for each image, following SaucyBot's pattern
-		imageUrls.forEach((imageUrl) => {
+		imageUrls.forEach((imageUrl, index) => {
 			const embed = new EmbedBuilder()
 				.setColor(tweetData.color || EMBED_COLORS.INFO)
 				.setAuthor({
@@ -183,8 +183,9 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 				.setImage(imageUrl)
 				.setURL(originalTweetUrl);
 
-			if (tweetData.text) {
-				embed.setDescription(tweetData.text);
+			// Discord caps all embeds in a message at 6000 chars and only shows the first one's text in a gallery
+			if (tweetData.text && index === 0) {
+				embed.setDescription(tweetData.text.substring(0, 4000));
 			}
 
 			if (tweetData.likes !== undefined) {
