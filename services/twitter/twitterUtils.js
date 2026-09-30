@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require('discord.js');
 const { createTweetEmbed } = require('../../utils/embedBuilder');
 
 // Matches twitter.com/x.com and their FxEmbed mirrors, with or without a handle
@@ -116,6 +117,17 @@ async function buildTranslatedTweetMessage(tweetId, language) {
 		translatedTweet.url,
 		photoUrls,
 	);
+	const quote = translatedTweet.quote;
+	if (quote?.url) {
+		embeds[0].addFields({
+			name: '🔗 引用推文',
+			value: `[查看原推文](${quote.url})`,
+			inline: false,
+		});
+		for (const photo of quote.media?.photos || []) {
+			embeds.push(new EmbedBuilder().setImage(photo.url).setURL(quote.url));
+		}
+	}
 	const videoLinks = (translatedTweet.media?.videos || []).filter(video => video.url).map(video => `[Preview](${video.url})`);
 
 	return { text: videoLinks.join('\n') || undefined, embeds };

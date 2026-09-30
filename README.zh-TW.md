@@ -120,7 +120,7 @@ discordbot/
 | 右鍵訊息 → 「檢查圖片資訊」 | 將圖片的 metadata 透過私訊傳送給你。僅能手動觸發。 |
 | 右鍵訊息 → 「收藏圖片」 | 將圖片以美觀的嵌入式訊息透過私訊傳送給你，並附上原始訊息連結。僅能手動觸發。 |
 | 右鍵訊息 → 「轉換為GIF」 | 將訊息中的影片轉換成 GIF 並發布到頻道。 |
-| `/translate` | 輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`cn`、`en`、`jp` 等），機器人會移除你自己訊息上的連結預覽，並回覆翻譯後的推文連結。 |
+| `/translate` | 輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`cn`、`en`、`jp` 等），機器人會移除你自己訊息上的連結預覽，並顯示翻譯、原推文圖片、引用推文超連結及引用內的圖片；無法取得翻譯時改回覆翻譯連結。 |
 | `/ai-ranking` | 顯示 [Artificial Analysis](https://artificialanalysis.ai/) 的 AI 模型 Top 10，可依 `intelligence`、`coding`、`math` 或 `speed` 排序，並附上長條圖。同一模型只列出最高思考等級的版本。 |
 
 ### 自動功能
@@ -175,6 +175,10 @@ discordbot/
 3. 使用 `module.exports` 導出需要的函式
 
 ## 更新日誌 (Changelog)
+
+### 尚未發布
+
+*   **問題修復：** Twitter/X 翻譯現在會保留主推文圖片，並顯示引用原推文的超連結及引用內的圖片。適用於 `/translate` 和帶語言代碼的 fixupx/fixvx 連結。
 
 ### 版本 1.9.0 (2026-09-23)
 

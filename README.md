@@ -120,7 +120,7 @@ discordbot/
 | Right-click a message → "檢查圖片資訊" (View Image Info) | Sends the image's metadata to you via private message. Manual trigger only. |
 | Right-click a message → "收藏圖片" (Favorite Image) | Sends the image to you via private message in an aesthetically pleasing embed, along with a link to the original message. Manual trigger only. |
 | Right-click a message → "轉換為GIF" (Convert to GIF) | Converts the video in the message to a GIF and posts it to the channel. |
-| `/translate` | Takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) plus a target language (`tw`, `cn`, `en`, `jp`, …). Removes the link preview from your own message and replies with the translated tweet link. |
+| `/translate` | Takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) plus a target language (`tw`, `cn`, `en`, `jp`, …). Removes the link preview from your own message and displays the translation, tweet photos, a hyperlink to the quoted original tweet, and its photos. Falls back to a translated link if the translation is unavailable. |
 | `/ai-ranking` | Shows the Top 10 AI models from [Artificial Analysis](https://artificialanalysis.ai/) by `intelligence`, `coding`, `math`, or `speed`, with a bar chart. Each model is listed once, at its highest reasoning effort. |
 
 ### Automatic Features
@@ -175,6 +175,10 @@ When adding new features, please follow modular principles:
 3. Use `module.exports` to export necessary functions.
 
 ## Changelog
+
+### Unreleased
+
+*   **Fix:** Twitter/X translations retain the main tweet's photos and show a hyperlink to the quoted original tweet together with its photos. Applies to `/translate` and fixupx/fixvx links with a language suffix.
 
 ### Version 1.10.0 (2026-09-23)
 
