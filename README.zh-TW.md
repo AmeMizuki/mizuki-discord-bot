@@ -120,7 +120,7 @@ discordbot/
 | 右鍵訊息 → 「檢查圖片資訊」 | 將圖片的 metadata 透過私訊傳送給你。僅能手動觸發。 |
 | 右鍵訊息 → 「收藏圖片」 | 將圖片以美觀的嵌入式訊息透過私訊傳送給你，並附上原始訊息連結。僅能手動觸發。 |
 | 右鍵訊息 → 「轉換為GIF」 | 將訊息中的影片轉換成 GIF 並發布到頻道。 |
-| `/translate` | 輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`cn`、`en`、`jp` 等），機器人會移除你自己訊息上的連結預覽，並顯示翻譯、原推文圖片、引用推文超連結及引用內的圖片；無法取得翻譯時改回覆翻譯連結。 |
+| `/translate` | 輸入推文連結（`x.com`、`twitter.com` 或 `fixupx.com`/`fixvx.com` 鏡像連結）與目標語言（`tw`、`cn`、`en`、`jp` 等）。 |
 | `/ai-ranking` | 顯示 [Artificial Analysis](https://artificialanalysis.ai/) 的 AI 模型 Top 10，可依 `intelligence`、`coding`、`math` 或 `speed` 排序，並附上長條圖。同一模型只列出最高思考等級的版本。 |
 
 ### 自動功能
@@ -147,6 +147,10 @@ discordbot/
 ## 支援的圖片格式
 
 - PNG - 支援 tEXt 和 zTXt chunks
+- 右鍵圖片訊息 → **檢查圖片資訊**，機器人會將 metadata embed 私訊給你。
+- **ComfyUI**：分別顯示正向／負面 prompt，並列出步數、CFG、Sampler、Scheduler、Seed、實際圖片大小、模型、LoRA 名稱與權重、VAE、upscaler model 與放大方法；欄位格式與 SDXL 相同。
+- 優先使用 PNG 的執行 `prompt` 節點圖，依連線區分正負 prompt；只有 `workflow` 時讀取標準節點的 widgets 與 links。自訂節點應保留 `prompt` metadata，已移除 metadata 的圖片無法還原生成設定。
+- 解析與 embed 檢查：`node utils/metadata.test.js`。
 
 ## 開發說明
 
@@ -178,7 +182,12 @@ discordbot/
 
 ### 尚未發布
 
+*   **問題修復：** `/translate` 與帶語言代碼的 Twitter/X 鏡像連結將主文、引用譯文、引用作者與來源集中在第一個 Embed。主推文與引用推文的圖片各自使用原生多圖 gallery，不再合成圖片；兩邊的全部影片統一產生 `[Preview]` 超連結，先送出影片預覽訊息、再送出 Embed，與轉網址服務相同。無法取得引用翻譯時保留原文。
+
+### 版本 1.11.0 (2026-10-01)
+
 *   **問題修復：** Twitter/X 翻譯現在會保留主推文圖片，並顯示引用原推文的超連結及引用內的圖片。適用於 `/translate` 和帶語言代碼的 fixupx/fixvx 連結。
+*   **新增功能：** ComfyUI 圖片資訊支援生成參數、依連線辨識的正負 prompt、模型／LoRA 與放大模型／方法，並沿用 SDXL 的分欄 embed 格式；修正 PNG `prompt`／`workflow` 分開儲存及 zTXt 解壓縮的解析。
 
 ### 版本 1.9.0 (2026-09-23)
 

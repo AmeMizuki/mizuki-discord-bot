@@ -120,7 +120,7 @@ discordbot/
 | Right-click a message → "檢查圖片資訊" (View Image Info) | Sends the image's metadata to you via private message. Manual trigger only. |
 | Right-click a message → "收藏圖片" (Favorite Image) | Sends the image to you via private message in an aesthetically pleasing embed, along with a link to the original message. Manual trigger only. |
 | Right-click a message → "轉換為GIF" (Convert to GIF) | Converts the video in the message to a GIF and posts it to the channel. |
-| `/translate` | Takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) plus a target language (`tw`, `cn`, `en`, `jp`, …). Removes the link preview from your own message and displays the translation, tweet photos, a hyperlink to the quoted original tweet, and its photos. Falls back to a translated link if the translation is unavailable. |
+| `/translate` | Takes a tweet link (`x.com`, `twitter.com`, or a `fixupx.com`/`fixvx.com` mirror) plus a target language (`tw`, `cn`, `en`, `jp`, …). |
 | `/ai-ranking` | Shows the Top 10 AI models from [Artificial Analysis](https://artificialanalysis.ai/) by `intelligence`, `coding`, `math`, or `speed`, with a bar chart. Each model is listed once, at its highest reasoning effort. |
 
 ### Automatic Features
@@ -147,6 +147,10 @@ discordbot/
 ## Supported Image Formats
 
 - PNG - Supports tEXt and zTXt chunks.
+- Right-click an image message → **檢查圖片資訊** to receive its metadata embed by DM.
+- **ComfyUI**: Separate positive/negative prompts and SDXL-style fields for steps, CFG, sampler, scheduler, seed, actual image dimensions, models, LoRA names/weights, VAE, upscaler models, and upscale methods.
+- The executed PNG `prompt` graph takes precedence and conditioning links determine prompt polarity. Workflow-only files use standard node widgets and links. Keep the `prompt` metadata for custom nodes; stripped metadata cannot be reconstructed.
+- Run the parser/embed check with `node utils/metadata.test.js`.
 
 ## Development Notes
 
@@ -178,7 +182,12 @@ When adding new features, please follow modular principles:
 
 ### Unreleased
 
+*   **Fix:** `/translate` and language-suffixed Twitter/X mirror links keep the main and quoted translations, quoted author, and source links together in the first embed. Photos use separate native galleries for the main and quoted tweet without stitching. All main and quoted videos produce `[Preview]` hyperlinks in a preview-only message before the embeds, matching URL conversion behavior. Unavailable quoted translations retain the original text.
+
+### Version 1.11.0 (2026-10-01)
+
 *   **Fix:** Twitter/X translations retain the main tweet's photos and show a hyperlink to the quoted original tweet together with its photos. Applies to `/translate` and fixupx/fixvx links with a language suffix.
+*   **New Feature:** ComfyUI image metadata now shows sampling parameters, connected positive/negative prompts, models/LoRAs, and upscale models/methods in SDXL-style fields. Fixed separate PNG `prompt`/`workflow` chunks and zTXt decompression.
 
 ### Version 1.10.0 (2026-09-23)
 

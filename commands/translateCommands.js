@@ -89,7 +89,6 @@ async function handleTranslateCommand(interaction) {
 		await interaction.followUp({ embeds: translated.embeds });
 		return;
 	}
-
 	await interaction.editReply({ embeds: translated.embeds });
 }
 

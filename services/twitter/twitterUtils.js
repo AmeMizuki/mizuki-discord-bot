@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { createTweetEmbed } = require('../../utils/embedBuilder');
+const { createTranslatedTweetEmbed } = require('../../utils/embedBuilder');
 
 // Matches twitter.com/x.com and their FxEmbed mirrors, with or without a handle
 // (`/user/status/1`, `/i/web/status/1`, `/status/1`, `/user/status/1/ja`).
@@ -102,8 +102,7 @@ async function fetchTranslatedTweet(tweetId, language) {
 	}
 }
 
-// Returns { text, embeds } with the full translation, or null when FxEmbed has no translation.
-// Video links go in `text` because Discord only unfurls them in a message without bot embeds.
+// Translation text stays in the first embed; photos use native galleries and videos use Preview links.
 async function buildTranslatedTweetMessage(tweetId, language) {
 	const translatedTweet = await fetchTranslatedTweet(tweetId, language);
 	const translatedText = translatedTweet?.translation?.text;
@@ -111,25 +110,37 @@ async function buildTranslatedTweetMessage(tweetId, language) {
 		return null;
 	}
 
-	const photoUrls = translatedTweet.media?.photos?.map(photo => photo.url) || [];
-	const embeds = await createTweetEmbed(
-		{ ...translatedTweet, text: translatedText },
-		translatedTweet.url,
-		photoUrls,
-	);
-	const quote = translatedTweet.quote;
-	if (quote?.url) {
-		embeds[0].addFields({
-			name: '🔗 引用推文',
-			value: `[查看原推文](${quote.url})`,
-			inline: false,
-		});
-		for (const photo of quote.media?.photos || []) {
-			embeds.push(new EmbedBuilder().setImage(photo.url).setURL(quote.url));
+	let quote = translatedTweet.quote;
+	if (quote?.url && !quote.translation?.text) {
+		const quoteId = quote.id || getTweetIdFromUrl(quote.url);
+		if (quoteId) {
+			const translatedQuote = await fetchTranslatedTweet(quoteId, language);
+			if (translatedQuote?.translation?.text) {
+				quote = { ...quote, translation: translatedQuote.translation };
+			}
 		}
 	}
-	const videoLinks = (translatedTweet.media?.videos || []).filter(video => video.url).map(video => `[Preview](${video.url})`);
+	if (quote?.translation?.text) {
+		quote = { ...quote, text: quote.translation.text };
+	}
 
+	const embed = await createTranslatedTweetEmbed({ ...translatedTweet, text: translatedText }, translatedTweet.url, quote);
+	const embeds = [embed];
+	let firstPhoto = true;
+	for (const [tweet, url] of [[translatedTweet, translatedTweet.url], [quote, quote?.url || translatedTweet.url]]) {
+		for (const photo of tweet?.media?.photos || []) {
+			const imageEmbed = firstPhoto ? embed : new EmbedBuilder().setColor(embed.data.color);
+			imageEmbed.setImage(photo.url).setURL(url);
+			if (!firstPhoto) embeds.push(imageEmbed);
+			firstPhoto = false;
+		}
+	}
+	const videoLinks = [];
+	for (const tweet of [translatedTweet, quote]) {
+		for (const video of tweet?.media?.videos || []) {
+			if (video.url) videoLinks.push(`[Preview](${video.url})`);
+		}
+	}
 	return { text: videoLinks.join('\n') || undefined, embeds };
 }
 

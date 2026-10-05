@@ -35,45 +35,30 @@ async function createMetadataEmbed(metadata, user, imageUrl = null) {
 			.setTitle('✨ Image Metadata ✨')
 			.setColor(EMBED_COLORS.SUCCESS);
 
-		if (metadata.type === 'comfyui') {
-			let combinedPrompts = '';
-			if (parsedMetadata.positivePrompt && parsedMetadata.positivePrompt !== 'N/A') {
-				combinedPrompts += `**Positive:** ${parsedMetadata.positivePrompt}`;
-			}
-			if (parsedMetadata.negativePrompt && parsedMetadata.negativePrompt !== 'N/A') {
-				if (combinedPrompts) combinedPrompts += '\n\n';
-				combinedPrompts += `**Negative:** ${parsedMetadata.negativePrompt}`;
-			}
+		embed.addFields(
+			{
+				name: 'Prompt (正面提示詞)',
+				value: parsedMetadata.positivePrompt && parsedMetadata.positivePrompt !== 'N/A'
+					? `\`\`\`\n${truncateText(parsedMetadata.positivePrompt)}\n\`\`\``
+					: 'N/A',
+			},
+			{
+				name: 'Negative Prompt (負面提示詞)',
+				value: parsedMetadata.negativePrompt && parsedMetadata.negativePrompt !== 'N/A'
+					? `\`\`\`\n${truncateText(parsedMetadata.negativePrompt)}\n\`\`\``
+					: 'N/A',
+			},
+		);
 
-			embed.addFields({
-				name: 'ComfyUI Prompts',
-				value: combinedPrompts ? `\`\`\`\n${truncateText(combinedPrompts)}\n\`\`\`` : 'N/A',
-			});
-		}
-		else {
-			embed.addFields(
-				{
-					name: 'Prompt (正面提示詞)',
-					value: parsedMetadata.positivePrompt && parsedMetadata.positivePrompt !== 'N/A'
-						? `\`\`\`\n${truncateText(parsedMetadata.positivePrompt)}\n\`\`\``
-						: 'N/A',
-				},
-				{
-					name: 'Negative Prompt (負面提示詞)',
-					value: parsedMetadata.negativePrompt && parsedMetadata.negativePrompt !== 'N/A'
-						? `\`\`\`\n${truncateText(parsedMetadata.negativePrompt)}\n\`\`\``
-						: 'N/A',
-				},
-			);
-		}
+		const parameterOrder = ['Model', 'Model hash', 'LoRA', 'VAE', 'Steps', 'Sampler', 'CFG scale', 'Seed', 'Size', 'Denoising strength', 'Clip skip', 'Schedule Type', 'Upscale model', 'Upscale method'];
+		const parameters = parameterOrder.filter(key => parsedMetadata.parameters[key] && parsedMetadata.parameters[key] !== 'N/A');
+		// Reserve room for the footer and every field, including long LoRA/upscaler lists.
+		const fieldOverhead = parameters.reduce((length, key) => length + key.length + 11, 0);
+		const parameterLimit = Math.min(950, Math.floor((5800 - embed.length - fieldOverhead) / (parameters.length || 1)));
 
-		const parameterOrder = ['Model', 'Model hash', 'Steps', 'Sampler', 'CFG scale', 'Seed', 'Size', 'Denoising strength', 'Clip skip', 'Schedule Type'];
-
-		for (const key of parameterOrder) {
-			if (parsedMetadata.parameters[key] && parsedMetadata.parameters[key] !== 'N/A') {
-				const paramValue = truncateText(parsedMetadata.parameters[key], 950);
-				embed.addFields({ name: key, value: `\`\`\`\n${paramValue}\n\`\`\``, inline: true });
-			}
+		for (const key of parameters) {
+			const paramValue = truncateText(parsedMetadata.parameters[key], parameterLimit);
+			embed.addFields({ name: key, value: `\`\`\`\n${paramValue}\n\`\`\``, inline: true });
 		}
 	}
 	else {
@@ -131,10 +116,7 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 		imageUrls = imageUrls ? [imageUrls] : [];
 	}
 
-	const embeds = [];
-
-	// If no images, create a single text-only embed
-	if (imageUrls.length === 0) {
+	const embeds = (imageUrls.length ? imageUrls : [null]).map((imageUrl, index) => {
 		const embed = new EmbedBuilder()
 			.setColor(tweetData.color || EMBED_COLORS.INFO)
 			.setAuthor({
@@ -144,50 +126,15 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 			})
 			.setTimestamp(new Date(tweetData.created_timestamp * 1000));
 
-		if (tweetData.text) {
-			embed.setDescription(tweetData.text.substring(0, 4000));
+		if (imageUrl) {
+			embed.setImage(imageUrl).setURL(originalTweetUrl);
 		}
 
-		if (tweetData.likes !== undefined) {
-			embed.addFields({ name: '❤️ Likes', value: tweetData.likes.toLocaleString(), inline: true });
-		}
-		if (tweetData.retweets !== undefined) {
-			embed.addFields({ name: '🔁 Retweets', value: tweetData.retweets.toLocaleString(), inline: true });
-		}
-		if (tweetData.replies !== undefined) {
-			embed.addFields({ name: '💬 Replies', value: tweetData.replies.toLocaleString(), inline: true });
-		}
-		if (tweetData.views !== undefined && tweetData.views !== null) {
-			embed.addFields({ name: '👀 Views', value: tweetData.views.toLocaleString(), inline: true });
-		}
-
-		embed.addFields({
-			name: '🔗 Source',
-			value: `[Original Tweet](${originalTweetUrl})`,
-			inline: false,
-		});
-
-		embeds.push(embed);
-	}
-	else {
-		// Create one embed for each image, following SaucyBot's pattern
-		imageUrls.forEach((imageUrl, index) => {
-			const embed = new EmbedBuilder()
-				.setColor(tweetData.color || EMBED_COLORS.INFO)
-				.setAuthor({
-					name: `@${tweetData.author.screen_name} (${tweetData.author.name})`,
-					iconURL: tweetData.author.avatar_url,
-					url: `https://twitter.com/${tweetData.author.screen_name}`,
-				})
-				.setTimestamp(new Date(tweetData.created_timestamp * 1000))
-				.setImage(imageUrl)
-				.setURL(originalTweetUrl);
-
-			// Discord caps all embeds in a message at 6000 chars and only shows the first one's text in a gallery
-			if (tweetData.text && index === 0) {
+		// Discord galleries show text only on the first image; don't duplicate fields.
+		if (index === 0) {
+			if (tweetData.text) {
 				embed.setDescription(tweetData.text.substring(0, 4000));
 			}
-
 			if (tweetData.likes !== undefined) {
 				embed.addFields({ name: '❤️ Likes', value: tweetData.likes.toLocaleString(), inline: true });
 			}
@@ -200,18 +147,42 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 			if (tweetData.views !== undefined && tweetData.views !== null) {
 				embed.addFields({ name: '👀 Views', value: tweetData.views.toLocaleString(), inline: true });
 			}
-
 			embed.addFields({
 				name: '🔗 Source',
-				value: `[X (Twitter)](${originalTweetUrl})`,
+				value: `[${imageUrl ? 'X (Twitter)' : 'Original Tweet'}](${originalTweetUrl})`,
 				inline: false,
 			});
-
-			embeds.push(embed);
-		});
-	}
+		}
+		return embed;
+	});
 
 	return embeds;
+}
+
+async function createTranslatedTweetEmbed(tweetData, originalTweetUrl, quotedTweet = null) {
+	const [embed] = await createTweetEmbed(tweetData, originalTweetUrl);
+	embed.setURL(originalTweetUrl);
+
+	if (quotedTweet?.url) {
+		const author = quotedTweet.author;
+		embed.addFields({
+			name: '引用推文',
+			value: `[${author ? `@${author.screen_name} (${author.name})` : '查看原推文'}](${quotedTweet.url})`,
+			inline: false,
+		});
+	}
+	if (quotedTweet?.text) {
+		// Reserve room for the footer and up to four quote fields.
+		const fieldName = '引用內容';
+		const limit = Math.min(4000, Math.max(0, 5700 - embed.length - 4 * fieldName.length));
+		const text = quotedTweet.text.length > limit && limit > 3
+			? quotedTweet.text.substring(0, limit - 3) + '...'
+			: quotedTweet.text.substring(0, limit);
+		for (let offset = 0; offset < text.length; offset += 1024) {
+			embed.addFields({ name: fieldName, value: text.substring(offset, offset + 1024), inline: false });
+		}
+	}
+	return embed;
 }
 
 async function createThreadsEmbed(post, originalUrl, imageUrls = []) {
@@ -307,6 +278,7 @@ module.exports = {
 	createMetadataEmbed,
 	createFavoriteImageEmbed,
 	createTweetEmbed,
+	createTranslatedTweetEmbed,
 	createThreadsEmbed,
 	fetchOgEmbed,
 };
