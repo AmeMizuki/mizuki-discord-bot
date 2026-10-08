@@ -102,7 +102,44 @@ async function fetchTranslatedTweet(tweetId, language) {
 	}
 }
 
-// Translation text stays in the first embed; photos use native galleries and videos use Preview links.
+// fixupx serves an animated WebP for GIF posts; returns its final URL or null.
+async function getAnimatedPreviewUrl(originalUrl) {
+	const tweet = parseTweetUrl(originalUrl);
+	if (!tweet) {
+		return null;
+	}
+
+	const previewUrl = `https://d.fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}`;
+	try {
+		const { default: fetch } = await import('node-fetch');
+		const response = await fetch(previewUrl, {
+			timeout: 5000,
+			headers: {
+				'User-Agent': 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',
+				Range: 'bytes=0-127',
+			},
+		});
+		if (!response.ok || !(response.headers.get('content-type') || '').includes('webp')) {
+			return null;
+		}
+		const header = Buffer.from(await response.arrayBuffer());
+		return isAnimatedWebp(header) ? response.url : null;
+	}
+	catch (error) {
+		console.warn(`Fixupx animated preview probe failed, falling back to video: ${error.message}`);
+		return null;
+	}
+}
+
+// A still WebP means fixupx's animated preview failed.
+function isAnimatedWebp(bytes) {
+	return bytes.length >= 12
+		&& bytes.subarray(0, 4).toString('latin1') === 'RIFF'
+		&& bytes.subarray(8, 12).toString('latin1') === 'WEBP'
+		&& bytes.includes('ANIM');
+}
+
+// Translation text stays in the first embed; animations use images before falling back to Preview links.
 async function buildTranslatedTweetMessage(tweetId, language) {
 	const translatedTweet = await fetchTranslatedTweet(tweetId, language);
 	const translatedText = translatedTweet?.translation?.text;
@@ -127,18 +164,28 @@ async function buildTranslatedTweetMessage(tweetId, language) {
 	const embed = await createTranslatedTweetEmbed({ ...translatedTweet, text: translatedText }, translatedTweet.url, quote);
 	const embeds = [embed];
 	let firstPhoto = true;
+	const videoLinks = [];
 	for (const [tweet, url] of [[translatedTweet, translatedTweet.url], [quote, quote?.url || translatedTweet.url]]) {
-		for (const photo of tweet?.media?.photos || []) {
+		const imageUrls = (tweet?.media?.photos || []).map(photo => photo.url);
+		let seenGif = false;
+		for (const video of tweet?.media?.videos || []) {
+			const isGif = video.type === 'gif' || video.type === 'animated_gif';
+			const firstGif = !seenGif;
+			if (isGif) seenGif = true;
+			if (!video.url) continue;
+			let imageUrl = /\.(?:gif|webp)(?:[?#]|$)/i.test(video.url) ? video.url : null;
+			if (!imageUrl && firstGif && isGif) {
+				// ponytail: tweet-level preview covers the first GIF; use per-media previews if available.
+				imageUrl = await getAnimatedPreviewUrl(url);
+			}
+			if (imageUrl) imageUrls.push(imageUrl);
+			else videoLinks.push(`[Preview](${video.url})`);
+		}
+		for (const imageUrl of imageUrls) {
 			const imageEmbed = firstPhoto ? embed : new EmbedBuilder().setColor(embed.data.color);
-			imageEmbed.setImage(photo.url).setURL(url);
+			imageEmbed.setImage(imageUrl).setURL(url);
 			if (!firstPhoto) embeds.push(imageEmbed);
 			firstPhoto = false;
-		}
-	}
-	const videoLinks = [];
-	for (const tweet of [translatedTweet, quote]) {
-		for (const video of tweet?.media?.videos || []) {
-			if (video.url) videoLinks.push(`[Preview](${video.url})`);
 		}
 	}
 	return { text: videoLinks.join('\n') || undefined, embeds };
@@ -214,5 +261,6 @@ module.exports = {
 	buildTranslatedTweetUrl,
 	fetchTweetData,
 	buildTranslatedTweetMessage,
+	getAnimatedPreviewUrl,
 	convertVxTwitterData,
 };

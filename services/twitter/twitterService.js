@@ -1,4 +1,4 @@
-const { getTweetIdFromUrl, parseTweetUrl, fetchTweetData, buildTranslatedTweetMessage } = require('./twitterUtils');
+const { getTweetIdFromUrl, fetchTweetData, buildTranslatedTweetMessage, getAnimatedPreviewUrl } = require('./twitterUtils');
 const { createTweetEmbed } = require('../../utils/embedBuilder');
 
 // FxEmbed mirror links with a translation suffix, e.g. fixupx.com/user/status/123/tw
@@ -52,7 +52,7 @@ class TwitterService {
 			const isGif = tweetData.media.videos.every(video => video.type === 'gif');
 
 			if (isGif) {
-				const gifUrl = await this.getAnimatedPreviewUrl(url);
+				const gifUrl = await getAnimatedPreviewUrl(url);
 				if (gifUrl) {
 					return {
 						type: 'embeds',
@@ -94,51 +94,6 @@ class TwitterService {
 		return `\n${convertedLink}${reasonText}`;
 	}
 
-	// fixupx serves an animated WebP for GIF posts; returns its final URL or null
-	async getAnimatedPreviewUrl(originalUrl) {
-		const tweet = parseTweetUrl(originalUrl);
-		if (!tweet) {
-			return null;
-		}
-
-		const previewUrl = `https://d.fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}`;
-
-		try {
-			const { default: fetch } = await import('node-fetch');
-			const response = await fetch(previewUrl, {
-				timeout: 5000,
-				headers: {
-					'User-Agent': 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',
-					Range: 'bytes=0-127',
-				},
-			});
-
-			if (!response.ok) {
-				return null;
-			}
-
-			const contentType = response.headers.get('content-type') || '';
-			if (!contentType.includes('webp')) {
-				return null;
-			}
-
-			const header = Buffer.from(await response.arrayBuffer());
-			return TwitterService.isAnimatedWebp(header) ? response.url : null;
-		}
-		catch (error) {
-			console.warn(`Fixupx animated preview probe failed, falling back to vxtwitter: ${error.message}`);
-			return null;
-		}
-	}
-
-	// A WebP is only animated when it carries an ANIM chunk; a still WebP means
-	// fixupx's transcoded preview failed and Discord would not animate it.
-	static isAnimatedWebp(bytes) {
-		return bytes.length >= 12
-			&& bytes.subarray(0, 4).toString('latin1') === 'RIFF'
-			&& bytes.subarray(8, 12).toString('latin1') === 'WEBP'
-			&& bytes.includes('ANIM');
-	}
 }
 
 module.exports = TwitterService;

@@ -166,20 +166,21 @@ async function createTranslatedTweetEmbed(tweetData, originalTweetUrl, quotedTwe
 	if (quotedTweet?.url) {
 		const author = quotedTweet.author;
 		embed.addFields({
-			name: '引用推文',
-			value: `[${author ? `@${author.screen_name} (${author.name})` : '查看原推文'}](${quotedTweet.url})`,
+			name: '\u200b',
+			value: `>> 引用 [${author?.name || author?.screen_name || '查看原推文'}](${quotedTweet.url})`,
 			inline: false,
 		});
 	}
 	if (quotedTweet?.text) {
-		// Reserve room for the footer and up to four quote fields.
-		const fieldName = '引用內容';
-		const limit = Math.min(4000, Math.max(0, 5700 - embed.length - 4 * fieldName.length));
-		const text = quotedTweet.text.length > limit && limit > 3
-			? quotedTweet.text.substring(0, limit - 3) + '...'
-			: quotedTweet.text.substring(0, limit);
-		for (let offset = 0; offset < text.length; offset += 1024) {
-			embed.addFields({ name: fieldName, value: text.substring(offset, offset + 1024), inline: false });
+		// Reserve room for the footer, invisible field names and quote markers.
+		const fieldName = '\u200b';
+		const limit = Math.min(4000, Math.max(0, 5700 - embed.length - 4 * (fieldName.length + 3)));
+		const quotedText = quotedTweet.text.replace(/\n/g, '\n>> ');
+		const text = quotedText.length > limit && limit > 3
+			? quotedText.substring(0, limit - 3) + '...'
+			: quotedText.substring(0, limit);
+		for (let offset = 0; offset < text.length; offset += 1021) {
+			embed.addFields({ name: fieldName, value: `>> ${text.substring(offset, offset + 1021)}`, inline: false });
 		}
 	}
 	return embed;
