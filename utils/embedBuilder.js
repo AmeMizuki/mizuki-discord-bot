@@ -186,58 +186,6 @@ async function createTranslatedTweetEmbed(tweetData, originalTweetUrl, quotedTwe
 	return embed;
 }
 
-async function createThreadsEmbed(post, originalUrl, imageUrls = []) {
-	const embeds = [];
-
-	const buildBase = () => {
-		const embed = new EmbedBuilder()
-			.setColor(EMBED_COLORS.GRAY)
-			.setAuthor({
-				name: `@${post.author.username} (${post.author.full_name})`,
-				iconURL: post.author.avatar_url,
-				url: post.author.url,
-			})
-			.setTimestamp(new Date(post.timestamp * 1000));
-
-		if (post.content) {
-			embed.setDescription(post.content);
-		}
-
-		if (post.stats) {
-			embed.addFields(
-				{ name: '❤️ Likes', value: post.stats.likes.toLocaleString(), inline: true },
-				{ name: '💬 Comments', value: post.stats.comments.toLocaleString(), inline: true },
-				{ name: '🔁 Reposts', value: post.stats.reposts.toLocaleString(), inline: true },
-			);
-		}
-
-		embed.addFields({
-			name: '🔗 Source',
-			value: `[Threads](${originalUrl})`,
-			inline: false,
-		});
-
-		return embed;
-	};
-
-	if (imageUrls.length === 0) {
-		embeds.push(buildBase());
-	}
-	else {
-		// Same trick as createTweetEmbed: multiple embeds sharing one URL make
-		// Discord group them into a gallery, capped at 4 like X's preview.
-		imageUrls.slice(0, 4).forEach((imageUrl) => {
-			embeds.push(buildBase().setImage(imageUrl).setURL(originalUrl));
-		});
-	}
-
-	return embeds;
-}
-
-// Scrapes a fix-domain page's Open Graph tags and builds an embed from them,
-// so the reply can carry just the embed instead of a visible raw link.
-// Returns null when there's a video (a bot-built embed can't autoplay one -
-// Discord's own unfurl needs the link visible for that) or nothing usable was found.
 async function fetchOgEmbed(url) {
 	try {
 		const { data } = await axios.get(url, {
@@ -280,6 +228,5 @@ module.exports = {
 	createFavoriteImageEmbed,
 	createTweetEmbed,
 	createTranslatedTweetEmbed,
-	createThreadsEmbed,
 	fetchOgEmbed,
 };

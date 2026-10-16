@@ -207,7 +207,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 });
 
 client.on('messageCreate', async message => {
-	if (message.author.bot) return;
+	if (message.author.bot && !message.webhookId) return;
 
 	// Handle URL conversions (Twitter, etc.)
 	const hasUrlsToProcess = urlConversionService.hasUrlsToProcess(message.content);
@@ -229,7 +229,7 @@ client.on('messageCreate', async message => {
 });
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-	if (newMessage.author?.bot) return;
+	if (newMessage.author?.bot && !newMessage.webhookId) return;
 	if (newMessage.embeds.length === 0) return;
 	if ((newMessage.flags?.bitfield & 4) !== 0) return; // already SUPPRESS_EMBEDS
 

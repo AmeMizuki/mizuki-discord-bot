@@ -8,7 +8,6 @@ const MisskeyService = require('./misskey/misskeyService');
 const FacebookService = require('./facebook/facebookService');
 const TiktokService = require('./tiktok/tiktokService');
 const InstagramService = require('./instagram/instagramService');
-const ThreadsService = require('./threads/threadsService');
 const { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { URL } = require('url');
 
@@ -25,7 +24,6 @@ class UrlConversionService {
 			new FacebookService(),
 			new TiktokService(),
 			new InstagramService(),
-			new ThreadsService(),
 		];
 		this.deniedDomains = [
 			'exampledenied.com',
@@ -326,5 +324,4 @@ module.exports = {
 	FacebookService,
 	TiktokService,
 	InstagramService,
-	ThreadsService,
 };

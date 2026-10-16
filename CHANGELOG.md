@@ -1,6 +1,11 @@
 # Changelog
 
 [繁體中文](CHANGELOG.zh-TW.md) | [English](CHANGELOG.md)
+
+### Version 1.10.4 (2026-10-16)
+
+*   **Fix:** Webhook messages now participate in automatic URL conversion and native embed suppression, including previews attached later by Discord. Regular bot messages remain ignored. Suppression requires the bot's Manage Messages permission.
+
 ### Version 1.10.3 (2026-10-08)
 
 *   **Fix:** `/translate` and language-suffixed Twitter/X mirror links keep the main and quoted translations, quoted author, and source links together in the first embed. Photos use separate native galleries for the main and quoted tweet without stitching. All main and quoted videos produce `[Preview]` hyperlinks in a preview-only message before the embeds, matching URL conversion behavior. Unavailable quoted translations retain the original text.

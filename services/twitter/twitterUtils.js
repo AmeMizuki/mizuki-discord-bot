@@ -53,27 +53,33 @@ function convertVxTwitterMedia(mediaExtended) {
 
 	const photos = [];
 	const videos = [];
+	const all = [];
 
 	mediaExtended.forEach(item => {
 		if (item.type === 'image') {
-			photos.push({
+			const photo = {
 				url: item.url,
 				width: item.width || null,
 				height: item.height || null,
-			});
+				type: 'photo',
+			};
+			photos.push(photo);
+			all.push(photo);
 		}
 		else if (item.type === 'video' || item.type === 'gif') {
-			videos.push({
+			const video = {
 				url: item.url,
 				thumbnail_url: item.thumbnail_url || null,
 				width: item.width || null,
 				height: item.height || null,
 				type: item.type,
-			});
+			};
+			videos.push(video);
+			all.push(video);
 		}
 	});
 
-	const media = {};
+	const media = { all };
 	if (photos.length > 0) {
 		media.photos = photos;
 	}
@@ -81,7 +87,7 @@ function convertVxTwitterMedia(mediaExtended) {
 		media.videos = videos;
 	}
 
-	return Object.keys(media).length > 0 ? media : null;
+	return all.length > 0 ? media : null;
 }
 
 async function fetchTranslatedTweet(tweetId, language) {
@@ -102,14 +108,14 @@ async function fetchTranslatedTweet(tweetId, language) {
 	}
 }
 
-// fixupx serves an animated WebP for GIF posts; returns its final URL or null.
-async function getAnimatedPreviewUrl(originalUrl) {
+// fixupx serves an animated WebP for each indexed GIF; returns its final URL or null.
+async function getAnimatedPreviewUrl(originalUrl, mediaNumber = 1) {
 	const tweet = parseTweetUrl(originalUrl);
 	if (!tweet) {
 		return null;
 	}
 
-	const previewUrl = `https://d.fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}`;
+	const previewUrl = `https://d.fixupx.com/${tweet.screenName || 'i'}/status/${tweet.tweetId}/video/${mediaNumber}`;
 	try {
 		const { default: fetch } = await import('node-fetch');
 		const response = await fetch(previewUrl, {
@@ -139,6 +145,23 @@ function isAnimatedWebp(bytes) {
 		&& bytes.includes('ANIM');
 }
 
+async function getTweetMedia(tweetData, originalUrl) {
+	const imageUrls = (tweetData?.media?.photos || []).map(photo => photo.url);
+	const videoLinks = [];
+	for (const [index, video] of (tweetData?.media?.videos || []).entries()) {
+		if (!video.url) continue;
+		let imageUrl = /\.(?:gif|webp)(?:[?#]|$)/i.test(video.url) ? video.url : null;
+		if (!imageUrl && (video.type === 'gif' || video.type === 'animated_gif')) {
+			// Fixupx indexes all media, including photos, rather than just videos.
+			const mediaIndex = tweetData.media.all?.findIndex(media => media.url === video.url) ?? index;
+			imageUrl = await getAnimatedPreviewUrl(originalUrl, (mediaIndex < 0 ? index : mediaIndex) + 1);
+		}
+		if (imageUrl) imageUrls.push(imageUrl);
+		else videoLinks.push(`[Preview](${video.url})`);
+	}
+	return { imageUrls, videoLinks };
+}
+
 // Translation text stays in the first embed; animations use images before falling back to Preview links.
 async function buildTranslatedTweetMessage(tweetId, language) {
 	const translatedTweet = await fetchTranslatedTweet(tweetId, language);
@@ -166,21 +189,9 @@ async function buildTranslatedTweetMessage(tweetId, language) {
 	let firstPhoto = true;
 	const videoLinks = [];
 	for (const [tweet, url] of [[translatedTweet, translatedTweet.url], [quote, quote?.url || translatedTweet.url]]) {
-		const imageUrls = (tweet?.media?.photos || []).map(photo => photo.url);
-		let seenGif = false;
-		for (const video of tweet?.media?.videos || []) {
-			const isGif = video.type === 'gif' || video.type === 'animated_gif';
-			const firstGif = !seenGif;
-			if (isGif) seenGif = true;
-			if (!video.url) continue;
-			let imageUrl = /\.(?:gif|webp)(?:[?#]|$)/i.test(video.url) ? video.url : null;
-			if (!imageUrl && firstGif && isGif) {
-				// ponytail: tweet-level preview covers the first GIF; use per-media previews if available.
-				imageUrl = await getAnimatedPreviewUrl(url);
-			}
-			if (imageUrl) imageUrls.push(imageUrl);
-			else videoLinks.push(`[Preview](${video.url})`);
-		}
+		const media = await getTweetMedia(tweet, url);
+		videoLinks.push(...media.videoLinks);
+		const { imageUrls } = media;
 		for (const imageUrl of imageUrls) {
 			const imageEmbed = firstPhoto ? embed : new EmbedBuilder().setColor(embed.data.color);
 			imageEmbed.setImage(imageUrl).setURL(url);
@@ -262,5 +273,6 @@ module.exports = {
 	fetchTweetData,
 	buildTranslatedTweetMessage,
 	getAnimatedPreviewUrl,
+	getTweetMedia,
 	convertVxTwitterData,
 };
