@@ -16,9 +16,11 @@ class UrlConversionService {
 		this.services = [
 			new TwitterService(),
 			new PixivService(),
+			// new PttService(),
 			new BilibiliService(),
 			new PchomeService(),
 			new RedditService(),
+			// new CivitaiService(),
 			new EhentaiService(),
 			new MisskeyService(),
 			new FacebookService(),
@@ -104,25 +106,35 @@ class UrlConversionService {
 							iconURL: channel.client.user.displayAvatarURL(),
 						};
 					});
+					const PREVIEW_COUNT = 10;
+					const shown = result.content.slice(0, PREVIEW_COUNT);
+					const rest = result.content.slice(PREVIEW_COUNT);
 					if (result.attachmentUrl) {
 						try {
 							const attachment = new AttachmentBuilder(result.attachmentUrl);
-							sentMessage = await channel.send({ embeds: result.content, files: [attachment] });
+							sentMessage = await channel.send({ embeds: shown, files: [attachment] });
 						}
 						catch (attachError) {
 							console.error('Failed to send attachment with embed:', attachError);
-							sentMessage = await channel.send({ embeds: result.content });
+							sentMessage = await channel.send({ embeds: shown });
 						}
 					}
 					else {
-						// Discord skips link unfurls on messages that carry bot embeds, so the text goes out alone first
-						if (result.text) {
-							const textMessage = await channel.send(result.text);
-							if (originalMessage) {
-								this.storeMessageRelation(textMessage.id, originalMessage.author.id, originalMessage.id);
+						sentMessage = await channel.send({ embeds: shown });
+					}
+					if (rest.length > 0) {
+						const previewMessage = sentMessage;
+						await previewMessage.react('➕');
+						const collector = previewMessage.createReactionCollector({
+							filter: (reaction, user) => reaction.emoji.name === '➕' && !user.bot,
+							max: 1,
+							time: 600000,
+						});
+						collector.on('collect', async () => {
+							for (let i = 0; i < rest.length; i += 10) {
+								await channel.send({ embeds: rest.slice(i, i + 10) }).catch(console.error);
 							}
-						}
-						sentMessage = await channel.send({ embeds: result.content });
+						});
 					}
 					break;
 				}
@@ -316,9 +328,11 @@ module.exports = {
 	urlConversionService: new UrlConversionService(),
 	TwitterService,
 	PixivService,
+	// PttService,
 	BilibiliService,
 	PchomeService,
 	RedditService,
+	// CivitaiService,
 	EhentaiService,
 	MisskeyService,
 	FacebookService,

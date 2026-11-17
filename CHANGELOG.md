@@ -2,6 +2,9 @@
 
 [繁體中文](CHANGELOG.zh-TW.md) | [English](CHANGELOG.md)
 
+### Version 1.11.0 (2026-11-17)
+*   **Fix:** Tweets with more than 4 images (X now allows up to 20) were no longer converted to embeds because Discord rejects messages with more than 10 embeds. The first 10 images are now shown at once; if there are more, the bot adds a ➕ reaction and sends the remaining images (in batches of 10) when someone reacts with it. Tweets with 10 images or fewer are unaffected.
+
 ### Version 1.10.4 (2026-10-16)
 
 *   **Fix:** Webhook messages now participate in automatic URL conversion and native embed suppression, including previews attached later by Discord. Regular bot messages remain ignored. Suppression requires the bot's Manage Messages permission.
