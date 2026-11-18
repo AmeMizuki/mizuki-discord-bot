@@ -2,8 +2,13 @@
 
 [繁體中文](CHANGELOG.zh-TW.md) | [English](CHANGELOG.md)
 
+### Version 1.11.2 (2026-11-18)
+*   **Fix:** Tweets with 5+ images still showed only 4, because an embed gallery holds at most 4 images. These tweets (including `/translate` and translated mirror links) are now sent as a Components V2 card with the tweet text and a gallery of up to 10 images; video preview links sit above it, followed by a separator. With more than 10 images, a **➕ More** button sends the remaining images as another gallery card. Tweets with 4 images or fewer keep using embeds.
+*   **Change:** Tweet likes, retweets, replies and views are shown on one line as emoji + count, and the footer shows the bot's avatar and name with the tweet's posting time. In Components V2 cards the avatar is an application emoji named `bot_avatar`, uploaded on first start (delete it to refresh after changing the avatar).
+
 ### Version 1.11.0 (2026-11-17)
 *   **Fix:** Tweets with more than 4 images (X now allows up to 20) were no longer converted to embeds because Discord rejects messages with more than 10 embeds. The first 10 images are now shown at once; if there are more, the bot adds a ➕ reaction and sends the remaining images (in batches of 10) when someone reacts with it. Tweets with 10 images or fewer are unaffected.
+
 
 ### Version 1.10.4 (2026-10-16)
 

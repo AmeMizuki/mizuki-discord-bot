@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { parseTweetUrl, buildTranslatedTweetUrl, buildTranslatedTweetMessage } = require('../services/twitter/twitterUtils');
+const { buildTweetCards, sendTweetCards } = require('../utils/embedBuilder');
 
 // Codes accepted by FxEmbed/FixupX (tw/cn/hk/jp/kr are their region aliases)
 const TRANSLATION_LANGUAGES = [
@@ -84,6 +85,11 @@ async function handleTranslateCommand(interaction) {
 		return;
 	}
 
+	const cards = buildTweetCards(translated.embeds, translated.text);
+	if (cards) {
+		await sendTweetCards(payload => interaction.editReply(payload), cards);
+		return;
+	}
 	if (translated.text) {
 		await interaction.editReply(translated.text);
 		await interaction.followUp({ embeds: translated.embeds });

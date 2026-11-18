@@ -8,6 +8,7 @@ const { loadReactionRoles } = require('./utils/reactionRoleStorage');
 const { commands, ...commandHandlers } = require('./commands');
 const { loadSteamMonitoredChannels } = require('./utils/steamStorage');
 const SteamService = require('./services/steam/steamService');
+const { initBotSignature } = require('./utils/embedBuilder');
 
 // 確保 Bot 有權限讀取訊息內容、訊息歷史、發送訊息、管理表情符號等
 const client = new Client({
@@ -31,6 +32,7 @@ const steamService = new SteamService();
 
 client.on('ready', async () => {
 	console.log(`Logged in as ${client.user.tag}!`);
+	await initBotSignature(client);
 
 	const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
 

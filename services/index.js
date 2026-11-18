@@ -10,6 +10,7 @@ const TiktokService = require('./tiktok/tiktokService');
 const InstagramService = require('./instagram/instagramService');
 const { AttachmentBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { URL } = require('url');
+const { sendTweetCards } = require('../utils/embedBuilder');
 
 class UrlConversionService {
 	constructor() {
@@ -97,6 +98,9 @@ class UrlConversionService {
 				switch (result.type) {
 				case 'text':
 					sentMessage = await channel.send(result.content);
+					break;
+				case 'cards':
+					sentMessage = await sendTweetCards(payload => channel.send(payload), result.content);
 					break;
 				case 'embeds': {
 					result.content.forEach(embed => {
