@@ -2,6 +2,9 @@
 
 [繁體中文](CHANGELOG.zh-TW.md) | [English](CHANGELOG.md)
 
+### Version 1.11.3 (2026-11-18)
+*   **Fix:** Tweet videos stopped showing after 1.11.0: their preview links were no longer sent. The links now go out again as a separate plain message right before the tweet card, so Discord unfurls them into playable videos. This also applies to multi-image Components V2 cards, whose in-card links and separator (added in 1.11.2) could never play because V2 messages don't unfurl links.
+
 ### Version 1.11.2 (2026-11-18)
 *   **Fix:** Tweets with 5+ images still showed only 4, because an embed gallery holds at most 4 images. These tweets (including `/translate` and translated mirror links) are now sent as a Components V2 card with the tweet text and a gallery of up to 10 images; video preview links sit above it, followed by a separator. With more than 10 images, a **➕ More** button sends the remaining images as another gallery card. Tweets with 4 images or fewer keep using embeds.
 *   **Change:** Tweet likes, retweets, replies and views are shown on one line as emoji + count, and the footer shows the bot's avatar and name with the tweet's posting time. In Components V2 cards the avatar is an application emoji named `bot_avatar`, uploaded on first start (delete it to refresh after changing the avatar).

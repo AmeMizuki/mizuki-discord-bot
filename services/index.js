@@ -95,6 +95,14 @@ class UrlConversionService {
 		for (const result of results) {
 			try {
 				let sentMessage;
+				// Video links unfurl into players only in a plain message: Discord skips unfurls on
+				// messages with bot embeds, and Components V2 messages can't carry embeds at all.
+				if (result.text) {
+					const textMessage = await channel.send(result.text);
+					if (originalMessage) {
+						this.storeMessageRelation(textMessage.id, originalMessage.author.id, originalMessage.id);
+					}
+				}
 				switch (result.type) {
 				case 'text':
 					sentMessage = await channel.send(result.content);

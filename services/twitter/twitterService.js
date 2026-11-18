@@ -18,9 +18,9 @@ class TwitterService {
 		if (translatedMatch) {
 			const translated = await buildTranslatedTweetMessage(translatedMatch[1], translatedMatch[2].toLowerCase());
 			if (!translated) return { type: 'fallback', content: url };
-			const cards = buildTweetCards(translated.embeds, translated.text);
+			const cards = buildTweetCards(translated.embeds);
 			return cards
-				? { type: 'cards', content: cards }
+				? { type: 'cards', text: translated.text, content: cards }
 				: { type: 'embeds', text: translated.text, content: translated.embeds };
 		}
 
@@ -52,8 +52,8 @@ class TwitterService {
 		const { imageUrls, videoLinks } = await getTweetMedia(tweetData, url);
 		const text = videoLinks.join('\n') || undefined;
 		const embeds = await createTweetEmbed(tweetData, url, imageUrls);
-		const cards = buildTweetCards(embeds, text);
-		return cards ? { type: 'cards', content: cards } : { type: 'embeds', text, content: embeds };
+		const cards = buildTweetCards(embeds);
+		return { type: cards ? 'cards' : 'embeds', text, content: cards ?? embeds };
 	}
 
 	createFallbackLink(originalUrl, reason = '', source = 'fixupx') {

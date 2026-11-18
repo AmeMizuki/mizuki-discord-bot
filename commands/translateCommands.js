@@ -85,8 +85,13 @@ async function handleTranslateCommand(interaction) {
 		return;
 	}
 
-	const cards = buildTweetCards(translated.embeds, translated.text);
+	const cards = buildTweetCards(translated.embeds);
 	if (cards) {
+		if (translated.text) {
+			await interaction.editReply(translated.text);
+			await sendTweetCards(payload => interaction.followUp(payload), cards);
+			return;
+		}
 		await sendTweetCards(payload => interaction.editReply(payload), cards);
 		return;
 	}

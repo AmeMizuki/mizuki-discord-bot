@@ -1,7 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const {
-	EmbedBuilder, ContainerBuilder, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder, SeparatorBuilder,
+	EmbedBuilder, ContainerBuilder, SectionBuilder, TextDisplayBuilder, ThumbnailBuilder,
 	MediaGalleryBuilder, MediaGalleryItemBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags,
 } = require('discord.js');
 const { EMBED_COLORS } = require('../config');
@@ -244,7 +244,7 @@ const GALLERY_SIZE = 10;
 const MORE_BUTTON_ID = 'tweet_more_images';
 
 // Embed galleries show only 4 images, so tweets with more are rebuilt as Components V2
-function buildTweetCards(embeds, videoLinks) {
+function buildTweetCards(embeds) {
 	const data = embeds.map(embed => embed.data ?? embed);
 	const images = data.map(item => item.image?.url).filter(Boolean);
 	if (images.length <= 4) return null;
@@ -258,7 +258,7 @@ function buildTweetCards(embeds, videoLinks) {
 	].filter(Boolean).join(' | ');
 	if (footer) tail.push(`-# ${footer}`);
 
-	const budget = 4000 - (videoLinks?.length ?? 0);
+	const budget = 4000;
 	const fixed = [...head, ...tail].join('\n').length + 1;
 	const description = main.description?.substring(0, Math.max(0, budget - fixed));
 	const text = new TextDisplayBuilder()
@@ -279,11 +279,8 @@ function buildTweetCards(embeds, videoLinks) {
 	}
 	card.addMediaGalleryComponents(gallery(images.slice(0, GALLERY_SIZE)));
 
-	const components = videoLinks
-		? [new TextDisplayBuilder().setContent(videoLinks), new SeparatorBuilder(), card]
-		: [card];
 	const flags = MessageFlags.IsComponentsV2;
-	const pages = [{ components, flags }];
+	const pages = [{ components: [card], flags }];
 	for (let i = GALLERY_SIZE; i < images.length; i += GALLERY_SIZE) {
 		pages.push({ components: [container().addMediaGalleryComponents(gallery(images.slice(i, i + GALLERY_SIZE)))], flags });
 	}
