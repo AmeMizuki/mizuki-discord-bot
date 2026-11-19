@@ -2,6 +2,11 @@
 
 [繁體中文](CHANGELOG.zh-TW.md) | [English](CHANGELOG.md)
 
+### Version 1.11.4 (2026-11-19)
+*   **Fix:** In multi-image Components V2 tweet cards, the author link broke when the display name contained emoji. Only the `@handle` is linked now; the display name follows as plain text.
+*   **Change:** Tweet embeds and Components V2 tweet cards no longer show the 🔗 Source line. In Components V2 cards, the footer (bot avatar/name and posting time) now sits below the image gallery, matching the embed layout. Video preview links are unchanged.
+*   **Fix:** Tweets without text (e.g. video-only posts) no longer show an empty line above the stats; the stats line takes the text's place.
+
 ### Version 1.11.3 (2026-11-18)
 *   **Fix:** Tweet videos stopped showing after 1.11.0: their preview links were no longer sent. The links now go out again as a separate plain message right before the tweet card, so Discord unfurls them into playable videos. This also applies to multi-image Components V2 cards, whose in-card links and separator (added in 1.11.2) could never play because V2 messages don't unfurl links.
 

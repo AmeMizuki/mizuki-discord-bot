@@ -160,14 +160,13 @@ async function createTweetEmbed(tweetData, originalTweetUrl, imageUrls = []) {
 				['❤️', tweetData.likes], ['🔁', tweetData.retweets], ['💬', tweetData.replies], ['👀', tweetData.views],
 			].filter(([, count]) => count !== undefined && count !== null)
 				.map(([emoji, count]) => `${emoji} ${count.toLocaleString()}`);
-			if (stats.length) {
+			// Without text, a blank-named field would leave an empty line; show stats as the description.
+			if (stats.length && tweetData.text) {
 				embed.addFields({ name: '\u200b', value: stats.join('　'), inline: false });
 			}
-			embed.addFields({
-				name: '🔗 Source',
-				value: `[${imageUrl ? 'X (Twitter)' : 'Original Tweet'}](${originalTweetUrl})`,
-				inline: false,
-			});
+			else if (stats.length) {
+				embed.setDescription(stats.join('　'));
+			}
 		}
 		if (botFooter) embed.setFooter(botFooter);
 		return embed;
@@ -250,19 +249,27 @@ function buildTweetCards(embeds) {
 	if (images.length <= 4) return null;
 
 	const [main] = data;
-	const head = main.author ? [`**[${main.author.name}](${main.author.url})**`] : [];
-	const tail = (main.fields ?? []).map(field => (field.name === '\u200b' ? field.value : `**${field.name}**\n${field.value}`));
+	// Discord drops masked links whose label holds emoji, so only the @handle is linked; the display name follows.
+	const head = [];
+	if (main.author) {
+		const handle = main.author.url ? `@${main.author.url.split('/').pop()}` : '';
+		head.push(handle && main.author.name.startsWith(handle)
+			? `**[${handle}](${main.author.url})${main.author.name.slice(handle.length)}**`
+			: `**${main.author.name}**`);
+	}
+	const fields = (main.fields ?? [])
+		.map(field => (field.name === '\u200b' ? field.value : `**${field.name}**\n${field.value}`));
 	const footer = [
 		main.footer && `${botAvatarEmoji} ${main.footer.text}`.trim(),
 		main.timestamp && `<t:${Math.floor(Date.parse(main.timestamp) / 1000)}:f>`,
 	].filter(Boolean).join(' | ');
-	if (footer) tail.push(`-# ${footer}`);
 
-	const budget = 4000;
-	const fixed = [...head, ...tail].join('\n').length + 1;
+	// Same order as an embed: text and fields, then the images, then the footer.
+	const budget = 4000 - (footer ? footer.length + 3 : 0);
+	const fixed = [...head, ...fields].join('\n').length + 1;
 	const description = main.description?.substring(0, Math.max(0, budget - fixed));
 	const text = new TextDisplayBuilder()
-		.setContent([...head, description, ...tail].filter(Boolean).join('\n').substring(0, budget));
+		.setContent([...head, description, ...fields].filter(Boolean).join('\n').substring(0, budget));
 
 	const gallery = urls => new MediaGalleryBuilder()
 		.addItems(...urls.map(url => new MediaGalleryItemBuilder().setURL(url)));
@@ -278,6 +285,7 @@ function buildTweetCards(embeds) {
 		card.addTextDisplayComponents(text);
 	}
 	card.addMediaGalleryComponents(gallery(images.slice(0, GALLERY_SIZE)));
+	if (footer) card.addTextDisplayComponents(new TextDisplayBuilder().setContent(`-# ${footer}`));
 
 	const flags = MessageFlags.IsComponentsV2;
 	const pages = [{ components: [card], flags }];
